@@ -16,24 +16,24 @@ class WargaController extends Controller
      */
     public function dashboard()
     {
-        $warga = Auth::user();
+        $warga = Auth::guard('warga')->user();
         $today = Carbon::today()->toDateString();
-        
+
         // Cek apakah warga sudah mengisi keluhan hari ini
         $sudahIsiKeluhan = DB::table('keluhan_harian')
             ->where('id_warga', $warga->id)
             ->whereDate('tanggal', $today)
             ->exists();
-        
+
         // Ambil semua event yang tersedia
         $events = DB::table('list_event')->get();
-        
+
         // Ambil ID event yang sudah didaftarkan oleh warga
         $registeredEvents = DB::table('event_warga')
             ->where('id_warga', $warga->id)
             ->pluck('id_event')
             ->toArray();
-        
+
         return view('warga.dashboard', compact(
             'warga',
             'sudahIsiKeluhan',
@@ -44,20 +44,20 @@ class WargaController extends Controller
     }
 
     /**
-     * Mendaftarkan warga ke sebuah event
+     * Mendaftarkan warga ke sebuah event melalui form biasa
      */
     public function daftarEvent(Request $request)
     {
         $eventId = $request->event_id;
-        
+
         $alreadyRegistered = DB::table('event_warga')
-            ->where('id_warga', Auth::id())
+            ->where('id_warga', Auth::guard('warga')->id())
             ->where('id_event', $eventId)
             ->exists();
-        
+
         if (!$alreadyRegistered) {
             DB::table('event_warga')->insert([
-                'id_warga' => Auth::id(),
+                'id_warga' => Auth::guard('warga')->id(),
                 'id_event' => $eventId,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -68,12 +68,52 @@ class WargaController extends Controller
     }
 
     /**
+     * Mendaftarkan warga ke event via JSON (API-like)
+     */
+    public function registerEvent($id)
+    {
+        try {
+            $id_warga = Auth::guard('warga')->id();
+
+            $existing = DB::table('event_warga')
+                ->where('id_warga', $id_warga)
+                ->where('id_event', $id)
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda sudah terdaftar pada event ini.'
+                ], 409);
+            }
+
+            DB::table('event_warga')->insert([
+                'id_warga' => $id_warga,
+                'id_event' => $id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil mendaftar ke event.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error registering event: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mendaftar ke event.'
+            ], 500);
+        }
+    }
+
+    /**
      * Menampilkan daftar event yang telah didaftarkan oleh warga
      */
     public function eventSaya()
     {
         try {
-            $warga = Auth::user();
+            $warga = Auth::guard('warga')->user();
 
             $events = DB::table('event_warga')
                 ->join('list_event', 'event_warga.id_event', '=', 'list_event.id')
@@ -93,22 +133,22 @@ class WargaController extends Controller
     /**
      * Membatalkan pendaftaran warga pada sebuah event
      */
-    public function cancelEvent($eventId)
-    {
-        try {
-            $deleted = DB::table('event_warga')
-                ->where('id_warga', Auth::id())
-                ->where('id_event', $eventId)
-                ->delete();
-
-            if ($deleted) {
-                return response()->json(['success' => true, 'message' => 'Pendaftaran event berhasil dibatalkan'], 200);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Pendaftaran event tidak ditemukan'], 404);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error canceling event: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Gagal membatalkan pendaftaran event'], 500);
-        }
+    
+     public function cancel($id)
+     {
+         Log::info('Cancel method called for event ID: ' . $id);
+         
+         try {
+             $id_warga = Auth::guard('warga')->id();
+             Log::info('User ID: ' . $id_warga);
+             
+             // Rest of your code...
+         } catch (\Exception $e) {
+             Log::error('Error canceling event: ' . $e->getMessage());
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Terjadi kesalahan server saat membatalkan pendaftaran event.'
+             ], 500);
+         }
+     }
     }
-}

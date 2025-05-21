@@ -6,7 +6,6 @@ use App\Http\Controllers\Auth\WargaAuthController;
 use App\Http\Controllers\warga\WargaController;
 use App\Http\Controllers\warga\LokasiController;
 use App\Http\Controllers\warga\KeluhanController;
-use App\Http\Controllers\warga\EventController;
 
 Route::get('/', function () {
     return view('auth.welcome');
@@ -46,7 +45,7 @@ Route::prefix('warga')->group(function () {
         
         // Event management routes
         Route::get('/eventsaya', [WargaController::class, 'eventSaya'])->name('warga.eventsaya');
-        Route::post('/eventsaya/{id}/cancel', [EventController::class, 'cancelEvent'])->name('warga.events.cancel');
+        Route::post('/eventsaya/{id}/cancel', [WargaController::class, 'cancel'])->name('warga.event.cancel');
         Route::post('/daftar-event', [WargaController::class, 'daftarEvent'])->name('warga.daftar-event');
         
         // Location routes

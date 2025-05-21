@@ -10,6 +10,9 @@
         </h1>
     </div>
 
+    <!-- CSRF Token Meta -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- Events Grid -->
     <div class="bg-white rounded-lg shadow-md p-6">
         @if(count($events) > 0)
@@ -79,60 +82,68 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
     document.querySelectorAll('.cancel-event-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const eventId = this.dataset.eventId;
-            cancelEvent(eventId);
+            cancel(eventId, csrfToken);
         });
     });
 });
-
-
-function cancelEvent(id_event) {
+function cancel(id_event, csrfToken) {
     if (!confirm('Apakah Anda yakin ingin membatalkan pendaftaran event ini?')) {
         return;
     }
 
     const card = document.getElementById('event-' + id_event);
     if (card) {
-        card.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
+        card.classList.add('opacity-50', 'pointer-events-none');
         
-        // Wait for animation to complete before removing
-        setTimeout(() => {
-            fetch(`/eventsaya/${id_event}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
+        fetch(`/eventsaya/${id_event}/cancel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                id_event: id_event
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Add animation before removing
+                card.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
+                setTimeout(() => {
                     card.remove();
                     checkEmptyContainer();
-                } else {
-                    throw new Error(data.message || 'Gagal membatalkan event');
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                card.classList.remove('opacity-0', 'scale-95');
-                alert(err.message || 'Terjadi kesalahan saat membatalkan event');
-            });
-        }, 300);
+                    alert('Event berhasil dibatalkan');
+                }, 300);
+            } else {
+                throw new Error(data.message || 'Gagal membatalkan event');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            card.classList.remove('opacity-50', 'pointer-events-none');
+            alert(err.message || 'Terjadi kesalahan saat membatalkan event');
+        });
     }
 }
 
+
 function checkEmptyContainer() {
     const container = document.getElementById('event-container');
-    const remaining = container.querySelectorAll('.bg-white');
+    // Check if there are any event cards left
+    const remaining = container.querySelectorAll('[id^="event-"]');
     
     if (remaining.length === 0) {
         container.innerHTML = `
