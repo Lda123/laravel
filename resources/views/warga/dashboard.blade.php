@@ -364,7 +364,9 @@
             return isValid;
         }
         
-        // Search functionality for events
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
         const searchBar = document.getElementById('search-bar');
         if (searchBar) {
             searchBar.addEventListener('input', function() {

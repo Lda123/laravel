@@ -19,7 +19,9 @@ class ForumPost extends Model
         'gambar'
     ];
 
-    protected $dates = ['dibuat_pada'];
+    protected $casts = [
+        'dibuat_pada' => 'datetime',
+    ];
 
     // Relationships
     public function warga()
@@ -41,4 +43,10 @@ class ForumPost extends Model
     {
         return $this->hasMany(ForumPost::class, 'parent_id');
     }
+
+    public function comments()
+{
+    return $this->hasMany(ForumPost::class, 'parent_id');
+}
+
 }

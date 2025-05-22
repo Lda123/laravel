@@ -8,27 +8,35 @@ use Illuminate\Support\Facades\Hash;
 
 class KaderSeeder extends Seeder
 {
-    public function run(): void
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
     {
-        // Daftar RT yang sudah tersedia. Sesuaikan jika rt_id berbeda.
-        $dataKader = [
+        DB::table('kader')->insert([
             [
-                'nama_lengkap' => 'Siti Aminah',
-                'telepon' => '081234567891',
-                'password' => Hash::make('password123'),
+                'nama_lengkap' => 'Rina Sari',
+                'telepon' => '08123456790',
+                'password' => Hash::make('passwordKader123'),
                 'rt_id' => 1,
-            ],
-        ];
-
-        foreach ($dataKader as $kader) {
-            DB::table('kader')->insert([
-                'nama_lengkap' => $kader['nama_lengkap'],
-                'telepon' => $kader['telepon'],
-                'password' => $kader['password'],
-                'rt_id' => $kader['rt_id'],
                 'dibuat_pada' => now(),
-                'updated_at' => null,
-            ]);
-        }
+            ],
+            [
+                'nama_lengkap' => 'Joko Prabowo',
+                'telepon' => '08123456791',
+                'password' => Hash::make('passwordKader456'),
+                'rt_id' => 1,
+                'dibuat_pada' => now(),
+            ],
+            [
+                'nama_lengkap' => 'Ayu Lestari',
+                'telepon' => '08123456792',
+                'password' => Hash::make('passwordKader789'),
+                'rt_id' => 1,
+                'dibuat_pada' => now(),
+            ],
+        ]);
     }
 }

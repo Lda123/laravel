@@ -71,4 +71,10 @@ class Warga extends Authenticatable
     {
         return $this->hasMany(ForumPost::class, 'warga_id');
     }
+// Accessor untuk profile picture
+public function getProfilePicAttribute($value)
+{
+    return $value ?: 'assets/img/default-profile.jpg';
+}
+
 }

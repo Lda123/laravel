@@ -93,52 +93,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 function cancel(id_event, csrfToken) {
-    if (!confirm('Apakah Anda yakin ingin membatalkan pendaftaran event ini?')) {
-        return;
-    }
+    if (!confirm('Apakah Anda yakin ingin membatalkan pendaftaran event ini?')) return;
 
     const card = document.getElementById('event-' + id_event);
-    if (card) {
-        card.classList.add('opacity-50', 'pointer-events-none');
-        
-        fetch(`/eventsaya/${id_event}/cancel`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                id_event: id_event
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Add animation before removing
-                card.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
-                setTimeout(() => {
-                    card.remove();
-                    checkEmptyContainer();
-                    alert('Event berhasil dibatalkan');
-                }, 300);
-            } else {
-                throw new Error(data.message || 'Gagal membatalkan event');
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            card.classList.remove('opacity-50', 'pointer-events-none');
-            alert(err.message || 'Terjadi kesalahan saat membatalkan event');
-        });
-    }
-}
+    card.classList.add('opacity-50', 'pointer-events-none'); // Indikasi sedang diproses
 
+    fetch(`/eventsaya/${id_event}/cancel`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id_event })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            card.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
+            setTimeout(() => {
+                card.remove();
+                checkEmptyContainer();
+                alert('Event berhasil dibatalkan');
+            }, 300);
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        card.classList.remove('opacity-50', 'pointer-events-none');
+        alert('Terjadi kesalahan saat membatalkan event');
+    });
+}
 
 function checkEmptyContainer() {
     const container = document.getElementById('event-container');

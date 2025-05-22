@@ -134,21 +134,23 @@ class WargaController extends Controller
      * Membatalkan pendaftaran warga pada sebuah event
      */
     
-     public function cancel($id)
+     public function cancelEvent($id)
      {
-         Log::info('Cancel method called for event ID: ' . $id);
-         
          try {
-             $id_warga = Auth::guard('warga')->id();
-             Log::info('User ID: ' . $id_warga);
-             
-             // Rest of your code...
+             $id_warga = Auth::guard('warga')->id(); // Autentikasi warga
+             $deleted = DB::table('event_warga')
+                 ->where('id_warga', $id_warga)
+                 ->where('id_event', $id)
+                 ->delete();
+     
+             if ($deleted) {
+                 return response()->json(['success' => true]);
+             } else {
+                 return response()->json(['success' => false, 'message' => 'Pendaftaran tidak ditemukan'], 404);
+             }
          } catch (\Exception $e) {
-             Log::error('Error canceling event: ' . $e->getMessage());
-             return response()->json([
-                 'success' => false,
-                 'message' => 'Terjadi kesalahan server saat membatalkan pendaftaran event.'
-             ], 500);
+             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server'], 500);
          }
      }
-    }
+     
+         }

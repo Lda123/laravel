@@ -52,6 +52,7 @@
     </style>
     @yield('header-scripts')
 </head>
+@stack('scripts')
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header/Navbar -->
     <header>
@@ -62,9 +63,9 @@
                 </a>
                 <ul class="flex space-x-6">
                     <li><a href="{{ route('warga.dashboard') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.dashboard') ? 'text-blue-200 underline' : '' }}">Beranda</a></li>
-                    <li><a href="#" class="font-medium hover:text-blue-200 transition">Informasi</a></li>
-                    <li><a href="#" class="font-medium hover:text-blue-200 transition">Forum</a></li>
-                    <li><a href="#" class="font-medium hover:text-blue-200 transition">Profil</a></li>
+                    <li><a href="{{ route('warga.informasi.index') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.informasi.index') ? 'text-blue-200 underline' : '' }}">Informasi</a></li>
+                    <li><a href="{{ route('warga.forum.index') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.forum.index') ? 'text-blue-200 underline' : '' }}">Forum</a></li>
+                    <li><a href="{{ route('warga.profile') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.profile') ? 'text-blue-200 underline' : '' }}">Profile</a></li>
                 </ul>
             </div>
         </nav>
@@ -121,6 +122,11 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+
     <script>
         // Base JS functionality
         document.addEventListener('DOMContentLoaded', function() {

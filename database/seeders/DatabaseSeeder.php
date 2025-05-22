@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
         $this->call(KaderSeeder::class);
         $this->call(TrackingHarianSeeder::class);
         $this ->call(ListEventSeeder::class);
+        $this->call(EdukasiSeeder::class);
+        $this->call(ForumPostSeeder::class);
 
     }
 }                                                                                              
