@@ -45,7 +45,7 @@
 
         <p class="text-base text-[#858585] mt-4 animate-fade-in">
             Belum memiliki akun? 
-            <a href="{{ route('warga.register') }}" class="text-[#226BD2] hover:underline">Daftar Sekarang</a>
+            <a href="{{ route('register.signup') }}" class="text-[#226BD2] hover:underline">Daftar Sekarang</a>
         </p>
     </div>
 @endsection

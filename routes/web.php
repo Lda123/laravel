@@ -4,13 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\KaderAuthController;
 use App\Http\Controllers\Auth\WargaAuthController;
 use App\Http\Controllers\warga\WargaController;
-use App\Http\Controllers\warga\LokasiController;
-use App\Http\Controllers\warga\KeluhanController;
-use App\Http\Controllers\warga\InformasiController;
-use App\Http\Controllers\warga\ForumController;
-use App\Http\Controllers\Warga\ProfileController;
-use App\Http\Controllers\Warga\EditProfileController;
-use App\Http\Controllers\Warga\TrackingController;
+use App\Http\Controllers\warga\fitur_utama\LokasiController;
+use App\Http\Controllers\warga\fitur_utama\KeluhanController;
+use App\Http\Controllers\warga\fitur_utama\InformasiController;
+use App\Http\Controllers\warga\fitur_utama\ForumController;
+use App\Http\Controllers\Warga\profile\ProfileController;
+use App\Http\Controllers\Warga\profile\EditProfileController;
+use App\Http\Controllers\Warga\fitur_utama\TrackingController;
+use App\Http\Controllers\Warga\register\RegisterWargaController;
+use App\Http\Controllers\warga\register\AjaxController;
 
 Route::get('/', function () {
     return view('auth.welcome');
@@ -37,7 +39,23 @@ Route::prefix('warga')->group(function () {
     Route::post('/login', [WargaAuthController::class, 'login'])->name('warga.login.submit');
     Route::get('/register', [WargaAuthController::class, 'showRegistrationForm'])->name('warga.register');
     Route::post('/logout', [WargaAuthController::class, 'logout'])->name('warga.logout');
+
+    Route::get('/register/signup', [RegisterWargaController::class, 'showSignupForm'])->name('register.signup');
+    Route::post('/register/signup', [RegisterWargaController::class, 'processSignup'])->name('register.signup.submit');
+
+    Route::get('/register/otp', [RegisterWargaController::class, 'showOtpForm'])->name('register.otp');
+    Route::post('/register/otp', [RegisterWargaController::class, 'verifyOtp'])->name('register.otp.submit');
+
+    Route::get('/register/data-diri', [RegisterWargaController::class, 'showDataDiriForm'])->name('register.data_diri');
+    Route::post('/register/data-diri', [RegisterWargaController::class, 'submitDataDiri'])->name('register.data_diri.submit');
+
+    Route::get('/register/upload-ktp', [RegisterWargaController::class, 'showFotoForm'])->name('register.upload_ktp');
+    Route::post('/register/upload-ktp', [RegisterWargaController::class, 'submitFoto'])->name('register.upload_ktp.submit');
     
+    Route::post('/ajax/get-kelurahan', [AjaxController::class, 'getKelurahan']);
+    Route::post('/ajax/get-rw', [AjaxController::class, 'getRw']);
+    Route::post('/ajax/get-rt', [AjaxController::class, 'getRt']);
+
     // Protected routes for warga
     Route::middleware(['auth:warga'])->group(function() {
         // Dashboard
@@ -45,20 +63,25 @@ Route::prefix('warga')->group(function () {
         Route::get('/home-warga', [WargaController::class, 'dashboard']);
         
        // Keluhan routes
-    Route::get('/keluhan', [KeluhanController::class, 'index'])->name('keluhan');
-    Route::post('/keluhan', [KeluhanController::class, 'store'])->name('keluhan.store');
-        
+        Route::get('/keluhan', [KeluhanController::class, 'index'])->name('keluhan');
+        Route::post('/keluhan', [KeluhanController::class, 'store'])->name('keluhan.store');
+            
         // Event management routes
         Route::get('/eventsaya', [WargaController::class, 'eventSaya'])->name('warga.eventsaya');
         Route::post('/eventsaya/{id}/cancel', [WargaController::class, 'cancel'])->name('warga.event.cancel');
         Route::post('/daftar-event', [WargaController::class, 'daftarEvent'])->name('warga.daftar-event');
         
         // Location routes
-        Route::get('/lokasi', [LokasiController::class, 'index'])->name('warga.lokasi');
-        Route::post('/wilayah/coordinates', [LokasiController::class, 'getWilayahCoordinates'])->name('wilayah.coordinates');
-        Route::post('/dropdown/kelurahan', [LokasiController::class, 'getKelurahan'])->name('dropdown.kelurahan');
-        Route::post('/dropdown/rw', [LokasiController::class, 'getRw'])->name('dropdown.rw');
-        Route::post('/dropdown/rt', [LokasiController::class, 'getRt'])->name('dropdown.rt');
+       // Halaman utama lokasi
+    Route::get('/lokasi', [LokasiController::class, 'index'])->name('warga.lokasi');
+    
+    // AJAX endpoints untuk dropdown
+    Route::post('/lokasi/kelurahan', [LokasiController::class, 'getKelurahan'])->name('lokasi.kelurahan');
+    Route::post('/lokasi/rw', [LokasiController::class, 'getRw'])->name('lokasi.rw');
+    Route::post('/lokasi/rt', [LokasiController::class, 'getRt'])->name('lokasi.rt');
+    
+    // AJAX endpoint untuk mendapatkan koordinat wilayah
+    Route::post('/lokasi/coordinates', [LokasiController::class, 'getWilayahCoordinates'])->name('lokasi.coordinates');
         
         // Additional warga routes
         Route::get('/riwayat', [WargaController::class, 'index'])->name('warga.riwayat');
@@ -69,19 +92,13 @@ Route::prefix('warga')->group(function () {
 
         Route::get('/forum', [ForumController::class, 'index'])->name('warga.forum.index');
         Route::post('/forum', [ForumController::class, 'store'])->name('warga.forum.store');
-        });
 
-        // Route untuk warga
+                // Route untuk warga
         Route::get('/profile', [ProfileController::class, 'index'])->name('warga.profile');       
-    
-    // Route untuk menampilkan form edit profile
         Route::get('/profile/edit', [EditProfileController::class, 'edit'])->name('warga.profile.edit');
-
         
-        // Route untuk menyimpan perubahan profile
+                // Route untuk menyimpan perubahan profile
         Route::put('/profile/update', [EditProfileController::class, 'update'])->name('warga.profile.update');
-
-    Route::get('/riwayat-pengecekan', [TrackingController::class, 'riwayat'])->name('warga.riwayat');
-
-
+        Route::get('/riwayat-pengecekan', [TrackingController::class, 'riwayat'])->name('warga.riwayat');
+        });
 });

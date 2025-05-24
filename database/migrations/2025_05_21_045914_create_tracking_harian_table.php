@@ -4,22 +4,28 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTrackingHarianTable extends Migration
+return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('tracking_harian', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('warga_id');
-            $table->enum('status_kesehatan', ['Sehat', 'Gejala Ringan', 'Terkena DBD']);
-            $table->enum('status_lingkungan', ['Bersih', 'Kurang Bersih', 'Kotor']);
+            $table->unsignedBigInteger('warga_id'); // foreign ke warga
+            $table->string('warga_nik', 20); // dari laporan_harian
+            $table->string('nama_warga', 100); // dari laporan_harian
+            $table->unsignedBigInteger('kader_id')->nullable(); // foreign ke kader
+
+            // Field dari laporan_harian
+            $table->date('tanggal'); // gabungan dari 'tanggal' dan 'tanggal_pantau'
+            $table->string('keterangan', 100)->nullable();
             $table->enum('kategori_masalah', ['Aman', 'Tidak Aman', 'Belum Dicek'])->default('Belum Dicek');
             $table->text('deskripsi')->nullable();
-            $table->string('bukti_foto')->nullable();
-            $table->date('tanggal_pantau');
-            $table->unsignedBigInteger('kader_id')->nullable();
-            $table->timestamp('dibuat_pada')->useCurrent();
+            $table->string('bukti_foto', 255)->nullable();
+            $table->string('status', 50)->default('Selesai'); // dari laporan_harian
+            $table->timestamp('dibuat_pada')->useCurrent(); // dari tracking_harian
+            $table->timestamps(); // created_at dan updated_at
 
+            // Relasi
             $table->foreign('warga_id')->references('id')->on('warga')->onDelete('cascade');
             $table->foreign('kader_id')->references('id')->on('kader')->onDelete('set null');
         });
@@ -29,4 +35,4 @@ class CreateTrackingHarianTable extends Migration
     {
         Schema::dropIfExists('tracking_harian');
     }
-}
+};

@@ -46,95 +46,76 @@
         @endif
     </div>
 
-    <!-- Home Condition Status -->
-    <div class="my-6 rounded-lg overflow-hidden shadow-md animate-fade-in-up">
-        <div class="p-6 @if($home_condition && $home_condition->kategori_masalah == 'Aman') bg-green-50 border-l-4 border-green-500
-                        @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') bg-red-50 border-l-4 border-red-500
-                        @else bg-gray-50 border-l-4 border-gray-500 @endif">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    @if($home_condition && $home_condition->kategori_masalah == 'Aman')
-                        <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                    @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman')
-                        <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
-                    @else
-                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                    @endif
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-bold @if($home_condition && $home_condition->kategori_masalah == 'Aman') text-green-800
-                                              @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') text-red-800
-                                              @else text-gray-800 @endif">
-                        KONDISI RUMAH: {{ $home_condition ? ($status_display[$home_condition->kategori_masalah] ?? $home_condition->kategori_masalah) : 'Belum Dicek' }}
-                    </h3>
-                    <p class="text-sm @if($home_condition && $home_condition->kategori_masalah == 'Aman') text-green-700
-                                   @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') text-red-700
-                                   @else text-gray-700 @endif mt-1">
-                        @if(!$home_condition || $home_condition->kategori_masalah == 'Belum Dicek')
-                            Rumah Anda belum diperiksa oleh petugas
-                        @else
-                            Terakhir diperiksa: {{ $home_condition->tanggal_pantau->format('d M Y') }}
-                        @endif
-                    </p>
-                    
-                    <!-- Additional status information -->
-                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="bg-white p-3 rounded-lg">
-                            <p class="text-sm font-medium text-gray-500">Status Kesehatan:</p>
-                            <p class="text-sm font-semibold @if($home_condition && $home_condition->status_kesehatan == 'Sehat') text-green-600
-                                                         @elseif($home_condition && $home_condition->status_kesehatan == 'Gejala Ringan') text-yellow-600
-                                                         @else text-red-600 @endif">
-                                {{ $home_condition ? $home_condition->status_kesehatan : '-' }}
-                            </p>
-                        </div>
-                        <div class="bg-white p-3 rounded-lg">
-                            <p class="text-sm font-medium text-gray-500">Status Lingkungan:</p>
-                            <p class="text-sm font-semibold @if($home_condition && $home_condition->status_lingkungan == 'Bersih') text-green-600
-                                                         @elseif($home_condition && $home_condition->status_lingkungan == 'Kurang Bersih') text-yellow-600
-                                                         @else text-red-600 @endif">
-                                {{ $home_condition ? $home_condition->status_lingkungan : '-' }}
-                            </p>
-                        </div>
+   <!-- Home Condition Status -->
+<div class="my-6 rounded-lg overflow-hidden shadow-md animate-fade-in-up">
+    <div class="p-6 @if($home_condition && $home_condition->kategori_masalah == 'Aman') bg-green-50 border-l-4 border-green-500
+                    @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') bg-red-50 border-l-4 border-red-500
+                    @else bg-gray-50 border-l-4 border-gray-500 @endif">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                @if($home_condition && $home_condition->kategori_masalah == 'Aman')
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
-                    
-                    <p class="text-sm text-gray-600 mt-3">{{ $home_condition ? ($home_condition->deskripsi ?? 'Tidak ada deskripsi tambahan') : 'Belum ada data pemeriksaan rumah' }}</p>
-                </div>
+                @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman')
+                    <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                @else
+                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                @endif
             </div>
-            
-            @if(!$home_condition || $home_condition->kategori_masalah == 'Belum Dicek')
-                <div class="mt-4">
-                    <a href="{{ route('warga.pelaporan') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Minta Pemeriksaan Rumah
-                    </a>
-                </div>
-            @else
-                <div class="mt-4">
-                    <a href="{{ route('warga.riwayat') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                        Lihat Riwayat Pemeriksaan
-                    </a>
-                </div>
-            @endif
-        </div>
-    </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-bold @if($home_condition && $home_condition->kategori_masalah == 'Aman') text-green-800
+                                          @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') text-red-800
+                                          @else text-gray-800 @endif">
+                    KONDISI RUMAH: {{ $home_condition ? ($status_display[$home_condition->kategori_masalah] ?? $home_condition->kategori_masalah) : 'Belum Dicek' }}
+                </h3>
+                <p class="text-sm @if($home_condition && $home_condition->kategori_masalah == 'Aman') text-green-700
+                               @elseif($home_condition && $home_condition->kategori_masalah == 'Tidak Aman') text-red-700
+                               @else text-gray-700 @endif mt-1">
+                    @if(!$home_condition || $home_condition->kategori_masalah == 'Belum Dicek')
+                        Rumah Anda belum diperiksa oleh petugas
+                    @else
+                        Terakhir diperiksa: {{ \Carbon\Carbon::parse($home_condition->tanggal)->format('d M Y') }}
+                    @endif
+                </p>
 
+                <p class="text-sm text-gray-600 mt-3">
+                    {{ $home_condition ? ($home_condition->deskripsi ?? 'Tidak ada deskripsi tambahan') : 'Belum ada data pemeriksaan rumah' }}
+                </p>
+            </div>
+        </div>
+
+        @if(!$home_condition || $home_condition->kategori_masalah == 'Belum Dicek')
+            <div class="mt-4">
+                <a href="{{ route('warga.pelaporan') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Minta Pemeriksaan Rumah
+                </a>
+            </div>
+        @else
+            <div class="mt-4">
+                <a href="{{ route('warga.riwayat') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    Lihat Riwayat Pemeriksaan
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
         <!-- Edit Profile Button -->
         <a href="{{ route('warga.profile.edit') }}" class="flex items-center p-4 bg-white border border-gray-200 rounded-lg cursor-pointer transition-all duration-300 hover:bg-gray-50 hover:shadow-md hover:-translate-y-1">

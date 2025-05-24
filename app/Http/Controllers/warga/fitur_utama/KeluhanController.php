@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Warga;
+namespace App\Http\Controllers\Warga\fitur_utama;
 
 use App\Http\Controllers\Controller;
 use App\Models\KeluhanHarian;

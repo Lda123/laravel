@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Warga;
+namespace App\Http\Controllers\Warga\profile;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\TrackingHarian;
@@ -12,8 +12,8 @@ class ProfileController extends Controller
         $warga =  Auth::guard('warga')->user();
         // Get latest home condition status from tracking_harian
         $homeCondition = TrackingHarian::where('warga_id', $warga->id)
-            ->latest('tanggal_pantau')
-            ->first();
+        ->latest('tanggal')
+        ->first();    
             
         // Determine status display
         $statusDisplay = [

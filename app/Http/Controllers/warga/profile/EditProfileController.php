@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Warga;
+namespace App\Http\Controllers\Warga\profile;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

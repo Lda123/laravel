@@ -1,27 +1,40 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\TrackingHarian;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TrackingHarianSeeder extends Seeder
 {
     public function run(): void
     {
-        $wargaId = DB::table('warga')->inRandomOrder()->value('id');
-        $kaderId = DB::table('kader')->inRandomOrder()->value('id');
+        $kaderId = 1;
+        $wargaId = 1;
+        $wargaNik = '1234567890123456';
+        $namaWarga = 'Budi Santoso';
 
-        TrackingHarian::create([
-            'warga_id' => $wargaId,
-            'status_kesehatan' => 'Sehat',
-            'status_lingkungan' => 'Bersih',
-            'kategori_masalah' => 'Belum Dicek',
-            'deskripsi' => 'Lingkungan tampak bersih, tidak ada genangan air.',
-            'bukti_foto' => 'foto_bukti.jpg',
-            'tanggal_pantau' => now()->toDateString(),
-            'kader_id' => $kaderId,
-            'dibuat_pada' => now(),
-        ]);
+        $tanggal = Carbon::create(2025, 2, 1)->startOfWeek(); // Mulai dari minggu pertama Februari 2025
+        $endTanggal = Carbon::create(2025, 3, 31); // Akhir Maret 2025
+
+        while ($tanggal->lte($endTanggal)) {
+            TrackingHarian::create([
+                'warga_id' => $wargaId,
+                'warga_nik' => $wargaNik,
+                'nama_warga' => $namaWarga,
+                'kader_id' => $kaderId,
+                'tanggal' => $tanggal->toDateString(),
+                'keterangan' => 'Pemantauan mingguan',
+                'kategori_masalah' => collect(['Aman', 'Tidak Aman', 'Belum Dicek'])->random(),
+                'deskripsi' => 'Kondisi lingkungan dan kesehatan warga diperiksa.',
+                'bukti_foto' => null,
+                'status' => 'Selesai',
+                'dibuat_pada' => now(),
+            ]);
+
+            // Tambah 7 hari untuk minggu berikutnya
+            $tanggal->addWeek();
+        }
     }
 }

@@ -34,4 +34,10 @@ class Kader extends Authenticatable
     {
         return $this->hasMany(ForumPost::class, 'kader_id');
     }
+
+    // Relasi: kader bisa mengikuti banyak pelatihan
+    public function pelatihan()
+    {
+        return $this->belongsToMany(ListPelatihanKader::class, 'PelatihanKader', 'id_kader', 'id_pelatihan');
+    }
 }
