@@ -8,6 +8,8 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <style>
         .wilayah-icon {
@@ -151,6 +153,14 @@
         </div>
     </div>
 
+    <div id="app-data" 
+     data-tracking='@json($tracking_data ?? [])'
+     data-rawan-areas='@json($rawan_areas ?? [])'
+     data-user-location='@json($user_location ?? [])'
+     data-case-data='@json($case_data ?? [])'
+     style="display: none;">
+</div>
+
     <!-- Daerah Rawan Section -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Wilayah dengan Potensi DBD Tinggi</h2>
@@ -184,12 +194,28 @@
     </div>
 </div>
 
+<!-- JavaScript Data -->
 <script>
-    // Pass data from controller to JavaScript
-    const trackingData = @json($tracking_data);
-    const rawanAreas = @json($rawan_areas);
-    const userLocation = @json($user_location);
-    const caseData = @json($case_data);
+    const appDataElement = document.getElementById('app-data');
+    
+    window.appData = {
+        trackingData: JSON.parse(appDataElement.dataset.tracking || '[]'),
+        rawanAreas: JSON.parse(appDataElement.dataset.rawanAreas || '[]'),
+        userLocation: JSON.parse(appDataElement.dataset.userLocation || '[]'),
+        caseData: JSON.parse(appDataElement.dataset.caseData || '[]')
+    };
+    
+    // Debug: Log data to console
+    console.log('Tracking Data:', window.appData.trackingData);
+    console.log('Rawan Areas:', window.appData.rawanAreas);
+    console.log('User Location:', window.appData.userLocation);
+    console.log('Case Data:', window.appData.caseData);
+
+    // Get data from window object
+    const trackingData = window.appData.trackingData;
+    const rawanAreas = window.appData.rawanAreas;
+    const userLocation = window.appData.userLocation;
+    const caseData = window.appData.caseData;
 
     // Initialize Map with Leaflet
     let map;
@@ -224,101 +250,112 @@
         });
 
         // Add user marker if coordinates exist
-        if (userLocation.lat && userLocation.lng) {
+        if (userLocation && userLocation.lat && userLocation.lng) {
             const userMarker = L.marker([userLocation.lat, userLocation.lng], {
                 icon: userIcon,
-                title: userLocation.title
+                title: userLocation.title || 'Lokasi Anda'
             }).addTo(map).bindPopup(`
                 <div style="width: 250px;">
-                    <b>${userLocation.title}</b>
+                    <b>${userLocation.title || 'Lokasi Anda'}</b>
                     <p><b>Wilayah Anda:</b></p>
-                    <p>RT ${userLocation.rt}/RW ${userLocation.rw}</p>
-                    <p>${userLocation.kelurahan}, ${userLocation.kecamatan}</p>
+                    <p>RT ${userLocation.rt || ''}/RW ${userLocation.rw || ''}</p>
+                    <p>${userLocation.kelurahan || ''}, ${userLocation.kecamatan || ''}</p>
                 </div>
             `);
         }
 
         // Add tracking markers
-        trackingData.forEach(data => {
-            let icon;
-            let statusText = '';
-            let additionalInfo = '';
-            
-            if (data.kategori_masalah === 'Tidak Aman') {
-                icon = dangerIcon;
-                statusText = '<span class="status-tidak-aman">TIDAK AMAN</span>';
-                additionalInfo = `<p><b>Masalah:</b> ${data.deskripsi || 'Lingkungan kotor'}</p>`;
-            } else {
-                icon = safeIcon;
-                statusText = '<span class="status-aman">AMAN</span>';
-                additionalInfo = '<p>Tidak ada masalah yang dilaporkan</p>';
-            }
-            
-            const marker = L.marker([data.lat, data.lng], {
-                icon: icon
-            }).addTo(map).bindPopup(`
-                <div style="width: 250px;">
-                    <h3>Rumah ${data.nama_warga}</h3>
-                    <p><b>Status:</b> ${statusText}</p>
-                    <p><b>Wilayah:</b> RT ${data.rt}/RW ${data.rw}, ${data.kelurahan}, ${data.kecamatan}</p>
-                    ${additionalInfo}
-                    <p><b>Terakhir Dipantau:</b> ${new Date(data.tanggal).toLocaleDateString()}</p>
-                </div>
-            `);
-        });
-
-        // Add high risk areas as circles
-        rawanAreas.forEach(area => {
-            if (area.koordinat_lat && area.koordinat_lng) {
-                const color = area.rumah_tidak_aman > 5 ? '#FF0000' : 
-                            (area.rumah_tidak_aman > 2 ? '#FFA500' : '#00FF00');
+        if (trackingData && Array.isArray(trackingData)) {
+            trackingData.forEach(data => {
+                if (!data.lat || !data.lng) return;
                 
-                const circle = L.circle([area.koordinat_lat, area.koordinat_lng], {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.3,
-                    radius: 200
+                let icon;
+                let statusText = '';
+                let additionalInfo = '';
+                
+                if (data.kategori_masalah === 'Tidak Aman') {
+                    icon = dangerIcon;
+                    statusText = '<span class="status-tidak-aman">TIDAK AMAN</span>';
+                    additionalInfo = `<p><b>Masalah:</b> ${data.deskripsi || 'Lingkungan kotor'}</p>`;
+                } else {
+                    icon = safeIcon;
+                    statusText = '<span class="status-aman">AMAN</span>';
+                    additionalInfo = '<p>Tidak ada masalah yang dilaporkan</p>';
+                }
+                
+                const marker = L.marker([data.lat, data.lng], {
+                    icon: icon
                 }).addTo(map).bindPopup(`
                     <div style="width: 250px;">
-                        <h3>${area.wilayah}</h3>
-                        <p><b>Status:</b> 
-                            ${area.rumah_tidak_aman > 5 ? 'Rawan Tinggi' : 
-                             area.rumah_tidak_aman > 2 ? 'Rawan Sedang' : 'Aman'}
-                        </p>
-                        <p><b>Rumah Tidak Aman:</b> ${area.rumah_tidak_aman}</p>
-                        <p><b>Total Rumah:</b> ${area.total_rumah}</p>
+                        <h3>Rumah ${data.nama_warga || 'Tidak Diketahui'}</h3>
+                        <p><b>Status:</b> ${statusText}</p>
+                        <p><b>Wilayah:</b> RT ${data.rt || ''}/RW ${data.rw || ''}, ${data.kelurahan || ''}, ${data.kecamatan || ''}</p>
+                        ${additionalInfo}
+                        <p><b>Terakhir Dipantau:</b> ${data.tanggal ? new Date(data.tanggal).toLocaleDateString() : 'Tidak diketahui'}</p>
                     </div>
                 `);
-            }
-        });
+            });
+        }
+
+        // Add high risk areas as circles
+        if (rawanAreas && Array.isArray(rawanAreas)) {
+            rawanAreas.forEach(area => {
+                if (area.koordinat_lat && area.koordinat_lng) {
+                    const color = area.rumah_tidak_aman > 5 ? '#FF0000' : 
+                                (area.rumah_tidak_aman > 2 ? '#FFA500' : '#00FF00');
+                    
+                    const circle = L.circle([area.koordinat_lat, area.koordinat_lng], {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.3,
+                        radius: 200
+                    }).addTo(map).bindPopup(`
+                        <div style="width: 250px;">
+                            <h3>${area.wilayah || 'Wilayah Tidak Diketahui'}</h3>
+                            <p><b>Status:</b> 
+                                ${area.rumah_tidak_aman > 5 ? 'Rawan Tinggi' : 
+                                 area.rumah_tidak_aman > 2 ? 'Rawan Sedang' : 'Aman'}
+                            </p>
+                            <p><b>Rumah Tidak Aman:</b> ${area.rumah_tidak_aman || 0}</p>
+                            <p><b>Total Rumah:</b> ${area.total_rumah || 0}</p>
+                        </div>
+                    `);
+                }
+            });
+        }
 
         // Initialize Chart
         initializeChart();
     });
 
     function initializeChart() {
-        const ctx = document.getElementById('caseChart').getContext('2d');
+        const ctx = document.getElementById('caseChart');
+        if (!ctx) return;
+        
+        const chartCtx = ctx.getContext('2d');
         
         // Process case data for chart
         let labels = [];
         let data = [];
         
-        caseData.forEach(item => {
-            if (item.tanggal) {
-                labels.push(new Date(item.tanggal).toLocaleDateString());
-            } else if (item.bulan) {
-                labels.push(item.bulan);
-            } else if (item.minggu) {
-                labels.push(`Minggu ${item.minggu}`);
-            }
-            data.push(item.jumlah);
-        });
+        if (caseData && Array.isArray(caseData)) {
+            caseData.forEach(item => {
+                if (item.tanggal) {
+                    labels.push(new Date(item.tanggal).toLocaleDateString());
+                } else if (item.bulan) {
+                    labels.push(item.bulan);
+                } else if (item.minggu) {
+                    labels.push(`Minggu ${item.minggu}`);
+                }
+                data.push(item.jumlah || 0);
+            });
 
-        // Reverse arrays to show chronological order
-        labels.reverse();
-        data.reverse();
+            // Reverse arrays to show chronological order
+            labels.reverse();
+            data.reverse();
+        }
 
-        const caseChart = new Chart(ctx, {
+        const caseChart = new Chart(chartCtx, {
             type: 'bar',
             data: {
                 labels: labels,

@@ -12,14 +12,17 @@ class Warga extends Authenticatable
 
     protected $table = 'warga';
     protected $fillable = [
+        'nik',
         'nama_lengkap', 
-        'telepon', 
-        'password', 
-        'rt_id', 
-        'rw_id', 
-        'kelurahan_id', 
-        'kecamatan_id', 
-        'alamat_detail'
+        'tempat_lahir',
+        'tanggal_lahir',
+        'jenis_kelamin',
+        'alamat_lengkap',
+        'rt_id',
+        'telepon',
+        'password',
+        'foto_ktp',
+        'foto_diri_ktp'
     ];
 
     /**

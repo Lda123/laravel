@@ -12,7 +12,10 @@ use App\Http\Controllers\Warga\profile\ProfileController;
 use App\Http\Controllers\Warga\profile\EditProfileController;
 use App\Http\Controllers\Warga\fitur_utama\TrackingController;
 use App\Http\Controllers\Warga\register\RegisterWargaController;
-use App\Http\Controllers\warga\register\AjaxController;
+use App\Http\Controllers\Warga\register\datadiriController;
+use App\Http\Controllers\Warga\register\inputfotoController;
+use App\Http\Controllers\Warga\register\otpController;
+
 
 Route::get('/', function () {
     return view('auth.welcome');
@@ -41,21 +44,21 @@ Route::prefix('warga')->group(function () {
     Route::post('/logout', [WargaAuthController::class, 'logout'])->name('warga.logout');
 
     Route::get('/register/signup', [RegisterWargaController::class, 'showSignupForm'])->name('register.signup');
-    Route::post('/register/signup', [RegisterWargaController::class, 'processSignup'])->name('register.signup.submit');
+    Route::post('/register/signup', [RegisterWargaController::class, 'storeSignup'])->name('register.signup.submit');
 
-    Route::get('/register/otp', [RegisterWargaController::class, 'showOtpForm'])->name('register.otp');
-    Route::post('/register/otp', [RegisterWargaController::class, 'verifyOtp'])->name('register.otp.submit');
-
-    Route::get('/register/data-diri', [RegisterWargaController::class, 'showDataDiriForm'])->name('register.data_diri');
-    Route::post('/register/data-diri', [RegisterWargaController::class, 'submitDataDiri'])->name('register.data_diri.submit');
-
-    Route::get('/register/upload-ktp', [RegisterWargaController::class, 'showFotoForm'])->name('register.upload_ktp');
-    Route::post('/register/upload-ktp', [RegisterWargaController::class, 'submitFoto'])->name('register.upload_ktp.submit');
+    Route::get('/otp', [otpController::class, 'showOtpForm'])->name('register.otp');
+    Route::post('/otp', [otpController::class, 'verifyOtp'])->name('register.otp.submit');
+    Route::get('/otp/resend', [otpController::class, 'resendOtp'])->name('register.otp.resend');
+    Route::get('/register/data-diri', [datadiriController::class, 'showDataDiriForm'])->name('register.data_diri');
+    Route::post('/register/data-diri', [datadiriController::class, 'storeDataDiri'])->name('register.datadiri.store');
     
-    Route::post('/ajax/get-kelurahan', [AjaxController::class, 'getKelurahan']);
-    Route::post('/ajax/get-rw', [AjaxController::class, 'getRw']);
-    Route::post('/ajax/get-rt', [AjaxController::class, 'getRt']);
+    // AJAX routes
+    Route::post('/register/get-kelurahan', [datadiriController::class, 'getKelurahan'])->name('register.get.kelurahan');
+    Route::post('/register/get-rw', [datadiriController::class, 'getRw'])->name('register.get.rw');
+    Route::post('/register/get-rt', [datadiriController::class, 'getRt'])->name('register.get.rt');
 
+    Route::get('/register/upload-foto', [inputfotoController::class, 'showUploadFotoForm'])->name('register.upload-foto');
+    Route::post('/register/upload-foto', [inputfotoController::class, 'storeUploadFoto'])->name('register.upload-foto.store');
     // Protected routes for warga
     Route::middleware(['auth:warga'])->group(function() {
         // Dashboard
@@ -68,7 +71,7 @@ Route::prefix('warga')->group(function () {
             
         // Event management routes
         Route::get('/eventsaya', [WargaController::class, 'eventSaya'])->name('warga.eventsaya');
-        Route::post('/eventsaya/{id}/cancel', [WargaController::class, 'cancel'])->name('warga.event.cancel');
+        Route::delete('/eventsaya/{id}/cancel', [WargaController::class, 'cancelEvent'])->name('warga.event.cancel');
         Route::post('/daftar-event', [WargaController::class, 'daftarEvent'])->name('warga.daftar-event');
         
         // Location routes

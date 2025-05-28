@@ -26,26 +26,33 @@
                 {{ session('error') }}
             </div>
         @endif
-        <form action="{{ route('register.otp.submit') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
-    @csrf
-    <input type="text" name="otp" required
-        class="input-focus-effect w-full py-3 px-4 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none"
-        placeholder="Masukkan 5 digit kode OTP">
-    <button type="submit"
-        class="btn-hover-effect w-full py-3 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer mt-4">
-        Verifikasi
-    </button>
-</form>
 
+        @if(session('success'))
+            <div class="mb-4 p-3 bg-green-100 text-green-700 rounded-lg animate-fade-in w-[80%] max-w-[400px]">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <form action="{{ route('register.otp.submit') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
+            @csrf
+            <input type="text" name="otp" required maxlength="5"
+                class="input-focus-effect w-full py-3 px-4 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none"
+                placeholder="Masukkan 5 digit kode OTP">
+            <button type="submit"
+                class="btn-hover-effect w-full py-3 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer mt-4">
+                Verifikasi
+            </button>
+        </form>
 
         <p class="text-base text-[#858585] mt-6 animate-fade-in">
             Tidak menerima kode?
-            <a href="#" class="text-[#226BD2] hover:underline">Kirim Lagi</a>
+            <a href="{{ route('register.otp.resend') }}" class="text-[#226BD2] hover:underline">Kirim Lagi</a>
         </p>
     </div>
 </div>
 
 <!-- Popup OTP untuk testing -->
+@if(session('kode_otp'))
 <div id="otpPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4 otp-popup">
         <h3 class="text-xl font-bold text-[#1D3557] mb-4">Kode Verifikasi Anda</h3>
@@ -53,6 +60,7 @@
         <div class="bg-blue-50 p-4 rounded-lg mb-6">
             <p class="text-2xl font-bold text-center text-[#226BD2]">{{ session('kode_otp') }}</p>
         </div>
+        <p class="text-sm text-gray-500 mb-4 text-center">Kode ini akan expired dalam 5 menit</p>
         <button onclick="document.getElementById('otpPopup').classList.add('hidden')"
             class="btn-hover-effect w-full py-2 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer">
             Tutup
@@ -68,5 +76,6 @@
         }, 500);
     });
 </script>
+@endif
 
 @endsection

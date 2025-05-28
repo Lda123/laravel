@@ -151,6 +151,6 @@ class WargaController extends Controller
          } catch (\Exception $e) {
              return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server'], 500);
          }
-     }
+    }
      
-         }
+}

@@ -32,18 +32,38 @@
             </div>
         @endif
 
-        <form action="{{ route('register.signup.submit') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
+        {{-- Pesan validasi error --}}
+        @if($errors->any())
+            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg animate-fade-in w-[80%] max-w-[400px]">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('register.signup') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
             @csrf
             <input type="text" name="telepon" placeholder="Nomor Telepon" required pattern="[0-9]+"
                    title="Hanya angka yang diperbolehkan"
-                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none"
+                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none @error('telepon') border-red-500 @enderror"
                    value="{{ old('telepon') }}">
+            @error('telepon')
+                <p class="text-red-500 text-sm mt-1 mb-2">{{ $message }}</p>
+            @enderror
 
-            <input type="password" name="password" placeholder="Kata Sandi (min. 8 karakter, huruf & angka)" required
-                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none">
+            <input type="password" name="password" placeholder="Kata Sandi (min. 6 karakter)" required
+                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none @error('password') border-red-500 @enderror">
+            @error('password')
+                <p class="text-red-500 text-sm mt-1 mb-2">{{ $message }}</p>
+            @enderror
 
-            <input type="password" name="confirm_password" placeholder="Konfirmasi Kata Sandi" required
-                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none">
+            <input type="password" name="password_confirmation" placeholder="Konfirmasi Kata Sandi" required
+                   class="input-focus-effect w-full py-3 px-4 my-3 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none @error('password_confirmation') border-red-500 @enderror">
+            @error('password_confirmation')
+                <p class="text-red-500 text-sm mt-1 mb-2">{{ $message }}</p>
+            @enderror
 
             <div class="flex items-start w-full my-3 animate-fade-in">
                 <input type="checkbox" id="agree" required
