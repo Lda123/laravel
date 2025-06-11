@@ -11,7 +11,7 @@ class TrackingHarianSeeder extends Seeder
     public function run(): void
     {
         $kaderId = 1;
-        $wargaId = 1;
+        $wargaId = 2;
         $wargaNik = '1234567890123456';
         $namaWarga = 'Budi Santoso';
 
@@ -25,7 +25,6 @@ class TrackingHarianSeeder extends Seeder
                 'nama_warga' => $namaWarga,
                 'kader_id' => $kaderId,
                 'tanggal' => $tanggal->toDateString(),
-                'keterangan' => 'Pemantauan mingguan',
                 'kategori_masalah' => collect(['Aman', 'Tidak Aman', 'Belum Dicek'])->random(),
                 'deskripsi' => 'Kondisi lingkungan dan kesehatan warga diperiksa.',
                 'bukti_foto' => null,

@@ -10,6 +10,11 @@ class ForumPost extends Model
     use HasFactory;
 
     protected $table = 'forum_post';
+    
+    // Override Laravel's default timestamp column names
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diperbarui_pada';
+    
     protected $fillable = [
         'warga_id',
         'kader_id',
@@ -21,6 +26,7 @@ class ForumPost extends Model
 
     protected $casts = [
         'dibuat_pada' => 'datetime',
+        'diperbarui_pada' => 'datetime',
     ];
 
     // Relationships
@@ -45,8 +51,7 @@ class ForumPost extends Model
     }
 
     public function comments()
-{
-    return $this->hasMany(ForumPost::class, 'parent_id');
-}
-
+    {
+        return $this->hasMany(ForumPost::class, 'parent_id');
+    }
 }

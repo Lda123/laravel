@@ -8,12 +8,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\ListEvent;
 
 class WargaController extends Controller
 {
-    /**
-     * Menampilkan dashboard warga dengan status keluhan dan daftar event
-     */
     public function dashboard()
     {
         $warga = Auth::guard('warga')->user();
@@ -25,8 +23,8 @@ class WargaController extends Controller
             ->whereDate('tanggal', $today)
             ->exists();
 
-        // Ambil semua event yang tersedia
-        $events = DB::table('list_event')->get();
+        // Ambil semua event yang tersedia HANYA untuk warga
+        $events = ListEvent::forWarga()->get();
 
         // Ambil ID event yang sudah didaftarkan oleh warga
         $registeredEvents = DB::table('event_warga')
@@ -118,39 +116,38 @@ class WargaController extends Controller
             $events = DB::table('event_warga')
                 ->join('list_event', 'event_warga.id_event', '=', 'list_event.id')
                 ->where('event_warga.id_warga', $warga->id)
+                ->where('list_event.kategori_pengguna', 'warga') // Tambahkan filter ini
                 ->select('list_event.*', 'event_warga.created_at as tanggal_daftar')
                 ->get();
 
             return view('warga.eventsaya', compact('warga', 'events'));
         } catch (\Exception $e) {
             Log::error('Error in eventSaya: ' . $e->getMessage());
-
+            
             session()->flash('error', 'Terjadi kesalahan saat mengakses event: ' . $e->getMessage());
             return redirect()->route('warga.dashboard');
         }
     }
 
-    /**
-     * Membatalkan pendaftaran warga pada sebuah event
-     */
     
-     public function cancelEvent($id)
-     {
-         try {
-             $id_warga = Auth::guard('warga')->id(); // Autentikasi warga
-             $deleted = DB::table('event_warga')
-                 ->where('id_warga', $id_warga)
-                 ->where('id_event', $id)
-                 ->delete();
-     
-             if ($deleted) {
-                 return response()->json(['success' => true]);
-             } else {
-                 return response()->json(['success' => false, 'message' => 'Pendaftaran tidak ditemukan'], 404);
-             }
-         } catch (\Exception $e) {
-             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server'], 500);
-         }
+    public function cancelEvent(Request $request)
+    {
+        try {
+            $id_event = $request->input('cancel');
+            $id_warga = Auth::guard('warga')->id(); // Autentikasi warga
+
+            $deleted = DB::table('event_warga')
+                ->where('id_event', $id_event)
+                ->where('id_warga', $id_warga)
+                ->delete();
+
+            if ($deleted) {
+                return response()->json(['success' => true]);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Pendaftaran tidak ditemukan'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server'], 500);
+        }
     }
-     
 }

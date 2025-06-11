@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->string('file_pdf', 255);
             $table->string('cover_image', 255)->nullable();
+            $table->integer('halaman')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
     }

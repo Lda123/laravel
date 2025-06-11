@@ -20,6 +20,7 @@ class KaderSeeder extends Seeder
                 'nama_lengkap' => 'Rina Sari',
                 'telepon' => '08123456790',
                 'password' => Hash::make('passwordKader123'),
+                'profil_pict' => null, // Add this line
                 'rt_id' => 1,
                 'dibuat_pada' => now(),
             ],
@@ -27,6 +28,7 @@ class KaderSeeder extends Seeder
                 'nama_lengkap' => 'Joko Prabowo',
                 'telepon' => '08123456791',
                 'password' => Hash::make('passwordKader456'),
+                'profil_pict' => null, // Add this line
                 'rt_id' => 1,
                 'dibuat_pada' => now(),
             ],
@@ -34,6 +36,7 @@ class KaderSeeder extends Seeder
                 'nama_lengkap' => 'Ayu Lestari',
                 'telepon' => '08123456792',
                 'password' => Hash::make('passwordKader789'),
+                'profil_pict' => null, // Add this line
                 'rt_id' => 1,
                 'dibuat_pada' => now(),
             ],

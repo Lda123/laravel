@@ -18,16 +18,6 @@ class EditProfileController extends Controller
 
     public function update(Request $request)
     {
-        // Debug - hapus setelah berhasil
-        // dd([
-        //     'request_all' => $request->all(),
-        //     'has_file' => $request->hasFile('profile_pict'),
-        //     'file_info' => $request->hasFile('profile_pict') ? $request->file('profile_pict') : null,
-        //     'storage_exists' => file_exists(public_path('storage')),
-        //     'is_link' => is_link(public_path('storage'))
-        // ]);
-
-        // Ambil data warga yang sedang login
         $warga = Warga::find(auth('warga')->id());
 
         if (!$warga) {
@@ -39,10 +29,10 @@ class EditProfileController extends Controller
             'nama_lengkap' => 'required|string|max:255',
             'telepon' => 'required|string|max:15|regex:/^[0-9]{10,15}$/',
             'alamat_lengkap' => 'required|string',
-            'profile_pict' => 'nullable|image|mimes:jpeg,jpg,jpg,gif|max:2048'
+            'profile_pictures' => 'nullable|image|mimes:jpeg,jpg,jpg,gif|max:2048'
         ], [
             'telepon.regex' => 'Nomor telepon harus 10-15 digit angka',
-            'profile_pict.max' => 'Ukuran file terlalu besar (maksimal 2MB)'
+            'profile_pictures.max' => 'Ukuran file terlalu besar (maksimal 2MB)'
         ]);
 
         if ($validator->fails()) {
@@ -52,28 +42,28 @@ class EditProfileController extends Controller
         }
 
         // Proses upload gambar
-        $profilePicPath = $warga->profile_pict;
+        $profilePicPath = $warga->profile_pictures;
 
-        if ($request->hasFile('profile_pict')) {
+        if ($request->hasFile('profile_pictures')) {
             try {
                 // Metode 1: Menggunakan Storage (jika symbolic link sudah ada)
                 if (file_exists(public_path('storage')) && is_link(public_path('storage'))) {
                     // Hapus gambar lama
-                    if ($warga->profile_pict && 
-                        $warga->profile_pict !== 'assets/img/default-profile.jpg' &&
-                        Storage::disk('public')->exists($warga->profile_pict)) {
-                        Storage::disk('public')->delete($warga->profile_pict);
+                    if ($warga->profile_pictures && 
+                        $warga->profile_pictures !== 'assets/img/default-profile.jpg' &&
+                        Storage::disk('public')->exists($warga->profile_pictures)) {
+                        Storage::disk('public')->delete($warga->profile_pictures);
                     }
 
                     // Simpan gambar baru
-                    $fileName = time() . '_' . $request->file('profile_pict')->getClientOriginalName();
-                    $path = $request->file('profile_pict')->storeAs('profile_picts', $fileName, 'public');
+                    $fileName = time() . '_' . $request->file('profile_pictures')->getClientOriginalName();
+                    $path = $request->file('profile_pictures')->storeAs('profile_pictures', $fileName, 'public');
                     $profilePicPath = $path;
                 } 
                 // Metode 2: Menggunakan publicpath (alternatif jika symbolic link bermasalah)
                 else {
-                    $fileName = time() . '' . $request->file('profile_pict')->getClientOriginalName();
-                    $uploadPath = public_path('storage/uploads/profile_picts');
+                    $fileName = time() . '' . $request->file('profile_pictures')->getClientOriginalName();
+                    $uploadPath = public_path('storage/profile_pictures');
 
                     // Buat folder jika belum ada
                     if (!file_exists($uploadPath)) {
@@ -81,15 +71,15 @@ class EditProfileController extends Controller
                     }
 
                     // Hapus gambar lama
-                    if ($warga->profile_pict && 
-                        $warga->profile_pict !== 'images/default-profile.jpg' &&
-                        file_exists(public_path($warga->profile_pict))) {
-                        unlink(public_path($warga->profile_pict));
+                    if ($warga->profile_pictures && 
+                        $warga->profile_pictures !== 'images/default-profile.jpg' &&
+                        file_exists(public_path($warga->profile_pictures))) {
+                        unlink(public_path($warga->profile_pictures));
                     }
 
                     // Pindahkan file
-                    $request->file('profile_pict')->move($uploadPath, $fileName);
-                    $profilePicPath = 'storage/uploads/profile_picts/' . $fileName;
+                    $request->file('profile_pictures')->move($uploadPath, $fileName);
+                    $profilePicPath = 'storage/profile_pictures/' . $fileName;
                 }
 
             } catch (\Exception $e) {
@@ -104,7 +94,7 @@ class EditProfileController extends Controller
             $warga->nama_lengkap = $request->nama_lengkap;
             $warga->telepon = $request->telepon;
             $warga->alamat_lengkap = $request->alamat_lengkap;
-            $warga->profile_pict = $profilePicPath;
+            $warga->profile_pictures = $profilePicPath;
 
             $result = $warga->save();
 

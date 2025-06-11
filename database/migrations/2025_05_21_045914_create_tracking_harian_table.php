@@ -17,7 +17,6 @@ return new class extends Migration
 
             // Field dari laporan_harian
             $table->date('tanggal'); // gabungan dari 'tanggal' dan 'tanggal_pantau'
-            $table->string('keterangan', 100)->nullable();
             $table->enum('kategori_masalah', ['Aman', 'Tidak Aman', 'Belum Dicek'])->default('Belum Dicek');
             $table->text('deskripsi')->nullable();
             $table->string('bukti_foto', 255)->nullable();

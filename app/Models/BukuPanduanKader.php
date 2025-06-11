@@ -9,7 +9,7 @@ class BukuPanduanKader extends Model
 {
     use HasFactory;
 
-    protected $table = 'PanduanKader';
+    protected $table = 'buku_panduan_kader';
 
     public $timestamps = false; // Karena hanya ada created_at
 
@@ -23,4 +23,11 @@ class BukuPanduanKader extends Model
         'cover_image',
         'created_at',
     ];
+
+    // Di model BukuPanduanKader
+public function getCoverImageAttribute($value)
+{
+    if (!$value) return null;
+    return 'bukupanduan/covers/' . $value;
+}
 }

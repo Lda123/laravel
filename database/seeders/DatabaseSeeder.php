@@ -1,13 +1,6 @@
 <?php
 namespace Database\Seeders;
-
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB; 
-use App\Models\Kecamatan;            
-use App\Models\Kelurahan;                           
-use App\Models\Rw;                                                          
-use App\Models\Rt;  
-use App\Models\Warga;                                                                                                                                                                                                                                                                                                                       
+use Illuminate\Database\Seeder;                                                                                                                                                                                                                                                                                                                      
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -27,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this ->call(ListEventSeeder::class);
         $this->call(EdukasiSeeder::class);
         $this->call(ForumPostSeeder::class);
+        $this->call(BukuPanduanSeeder::class);
 
     }
 }                                                                                              

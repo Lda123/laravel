@@ -5,34 +5,40 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SaveVideoKaders extends Model
+class SavedVideo extends Model
 {
     use HasFactory;
 
-    protected $table = 'savedvideos';
-
-    protected $primaryKey = 'id';
-    public $incrementing = false;
-    public $timestamps = false;
-
+    protected $table = 'saved_videos';
+    
     protected $fillable = [
-        'id',
         'kader_id',
         'video_id',
-        'saved_at',
+        'saved_at'
     ];
 
-    protected $dates = ['saved_at'];
+    protected $casts = [
+        'saved_at' => 'datetime'
+    ];
 
-    // Relasi ke Kader
     public function kader()
     {
         return $this->belongsTo(Kader::class, 'kader_id');
     }
 
-    // Relasi ke Video
     public function video()
     {
         return $this->belongsTo(Edukasi::class, 'video_id');
+    }
+
+    public function warga()
+    {
+        return $this->belongsTo(Kader::class, 'warga_id');
+    }
+
+    // Scope untuk video yang masih ada (tidak dihapus)
+    public function scopeWithExistingVideo($query)
+    {
+        return $query->whereHas('video');
     }
 }

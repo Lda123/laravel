@@ -2,67 +2,84 @@
 
 @section('title', 'Lokasi - DengueCare')
 
-@section('head')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
-    <style>
-        .wilayah-icon {
-            z-index: 1000;
-        }
-        #map {
-            height: 500px;
-            width: 100%;
-            border-radius: 0.5rem;
-            z-index: 0;
-        }
-        .location-card {
-            transition: all 0.3s ease;
-        }
-        .location-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .risk-high { background-color: #fecaca; }
-        .risk-medium { background-color: #fed7aa; }
-        .risk-low { background-color: #bbf7d0; }
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1em;
-        }
-        .input-focus-effect:focus {
-            box-shadow: 0 0 0 3px rgba(34, 107, 210, 0.3);
-            border-color: #226BD2;
-        }
-        .leaflet-popup-content {
-            width: 250px !important;
-        }
-        .leaflet-popup-content h3 {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #1e40af;
-        }
-        .leaflet-popup-content .status-aman {
-            color: #16a34a;
-            font-weight: bold;
-        }
-        .leaflet-popup-content .status-tidak-aman {
-            color: #dc2626;
-            font-weight: bold;
-        }
-        .leaflet-popup-content .status-dbd {
-            color: #b91c1c;
-            font-weight: bold;
-        }
-    </style>
+@section('custom-css')
+<style>
+    .wilayah-icon {
+        z-index: 1000;
+    }
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 0.5rem;
+        z-index: 0;
+    }
+    .location-card {
+        transition: all 0.3s ease;
+    }
+    .location-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .risk-high { background-color: #fecaca; }
+    .risk-medium { background-color: #fed7aa; }
+    .risk-low { background-color: #bbf7d0; }
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1em;
+    }
+    .input-focus-effect:focus {
+        box-shadow: 0 0 0 3px rgba(34, 107, 210, 0.3);
+        border-color: #226BD2;
+    }
+    .leaflet-popup-content {
+        width: 250px !important;
+    }
+    .leaflet-popup-content h3 {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #1e40af;
+    }
+    .leaflet-popup-content .status-aman {
+        color: #16a34a;
+        font-weight: bold;
+    }
+    .leaflet-popup-content .status-tidak-aman {
+        color: #dc2626;
+        font-weight: bold;
+    }
+    .leaflet-popup-content .status-dbd {
+        color: #b91c1c;
+        font-weight: bold;
+    }
+    .dropdown-disabled {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+    }
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+@endsection
+
+@section('header-scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 @endsection
 
 @section('content')
@@ -70,12 +87,11 @@
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Peta Lokasi dan Pemantauan DBD</h1>
     
     <!-- Search Section -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 animate-fade-in">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Cari Wilayah</h2>
         <form id="searchForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            @csrf
             <div>
-                <label class="block text-gray-700 mb-2">Kecamatan</label>
+                <label class="block text-gray-700 mb-2 font-medium">Kecamatan</label>
                 <select id="kecamatan" name="kecamatan" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none">
                     <option value="">Pilih Kecamatan</option>
                     @foreach($kecamatan_options as $kecamatan)
@@ -84,41 +100,83 @@
                 </select>
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">Kelurahan</label>
-                <select id="kelurahan" name="kelurahan" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none" disabled>
-                    <option value="">Pilih Kelurahan</option>
+                <label class="block text-gray-700 mb-2 font-medium">Kelurahan</label>
+                <select id="kelurahan" name="kelurahan" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none dropdown-disabled" disabled>
+                    <option value="">Pilih Kecamatan terlebih dahulu</option>
                 </select>
+                <div id="kelurahan-loading" class="hidden mt-2">
+                    <span class="spinner"></span> <span class="text-sm text-gray-600">Memuat kelurahan...</span>
+                </div>
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">RW</label>
-                <select id="rw" name="rw" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none" disabled>
-                    <option value="">Pilih RW</option>
+                <label class="block text-gray-700 mb-2 font-medium">RW</label>
+                <select id="rw" name="rw" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none dropdown-disabled" disabled>
+                    <option value="">Pilih Kelurahan terlebih dahulu</option>
                 </select>
+                <div id="rw-loading" class="hidden mt-2">
+                    <span class="spinner"></span> <span class="text-sm text-gray-600">Memuat RW...</span>
+                </div>
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">RT</label>
-                <select id="rt" name="rt" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none" disabled>
-                    <option value="">Pilih RT</option>
+                <label class="block text-gray-700 mb-2 font-medium">RT</label>
+                <select id="rt" name="rt" class="input-focus-effect w-full px-4 py-2 border rounded-lg transition-all duration-300 focus:outline-none dropdown-disabled" disabled>
+                    <option value="">Pilih RW terlebih dahulu</option>
                 </select>
+                <div id="rt-loading" class="hidden mt-2">
+                    <span class="spinner"></span> <span class="text-sm text-gray-600">Memuat RT...</span>
+                </div>
             </div>
             <div class="flex items-end">
-                <button type="button" id="btnCari" class="input-focus-effect w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    Cari
+                <button type="button" id="btnCari" class="input-focus-effect w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 btn-hover disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    Cari Lokasi
                 </button>
             </div>
         </form>
+        <div id="search-result" class="mt-4 hidden">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <span id="search-message"></span>
+            </div>
+        </div>
     </div>
 
     <!-- Map Section -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Peta Pemantauan DBD Surabaya</h2>
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 animate-fade-in">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Peta Pemantauan DBD Surabaya</h2>
+            <div class="flex gap-2">
+                <button id="btnResetMap" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-300">
+                    Reset Peta
+                </button>
+                <button id="btnUserLocation" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300">
+                    Lokasi Saya
+                </button>
+            </div>
+        </div>
         <div id="map"></div>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-blue-600 rounded-full mr-2 border-2 border-white shadow"></div>
+                <span>Lokasi Anda</span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-green-600 rounded-full mr-2 border-2 border-white shadow"></div>
+                <span>Rumah Aman</span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-red-600 rounded-full mr-2 border-2 border-white shadow"></div>
+                <span>Rumah Tidak Aman</span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-4 h-4 border-2 border-orange-500 rounded-full mr-2"></div>
+                <span>Area Rawan DBD</span>
+            </div>
+        </div>
     </div>
 
     <!-- Statistics Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <!-- Status Rumah -->
-        <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover animate-slide-in">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Status Rumah</h2>
             <div class="grid grid-cols-3 gap-4 text-center">
                 <div class="bg-green-100 p-4 rounded-lg">
@@ -140,7 +198,7 @@
         </div>
 
         <!-- Grafik Kasus -->
-        <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-md p-6 card-hover animate-slide-in">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-800">Grafik Kasus DBD</h2>
                 <select id="period-select" class="input-focus-effect px-4 pr-8 py-1.5 border rounded-lg transition-all duration-300 focus:outline-none">
@@ -153,400 +211,517 @@
         </div>
     </div>
 
-    <div id="app-data" 
-     data-tracking='@json($tracking_data ?? [])'
-     data-rawan-areas='@json($rawan_areas ?? [])'
-     data-user-location='@json($user_location ?? [])'
-     data-case-data='@json($case_data ?? [])'
-     style="display: none;">
-</div>
-
     <!-- Daerah Rawan Section -->
-    <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Wilayah dengan Potensi DBD Tinggi</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach($rawan_areas as $area)
-                @php
-                    $riskClass = 'risk-low';
-                    $riskText = 'Aman';
-                    $riskColor = 'text-green-600';
-                    
-                    if($area->rumah_tidak_aman > 5) {
-                        $riskClass = 'risk-high';
-                        $riskText = 'Rawan Tinggi';
-                        $riskColor = 'text-red-600';
-                    } elseif($area->rumah_tidak_aman > 2) {
-                        $riskClass = 'risk-medium';
-                        $riskText = 'Rawan Sedang';
-                        $riskColor = 'text-yellow-600';
-                    }
-                @endphp
-                <div class="location-card p-4 rounded-lg border {{ $riskClass }}">
-                    <h3 class="font-bold text-lg">{{ $area->wilayah }}</h3>
+        @if(count($rawan_areas) > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach ($rawan_areas as $area)
+                <div class="location-card p-4 rounded-lg border cursor-pointer
+                    {{ $area->rumah_tidak_aman > 5 ? 'risk-high' : 
+                       ($area->rumah_tidak_aman > 2 ? 'risk-medium' : 'risk-low') }}" 
+                     onclick="focusAreaOnMap('{{ $area->koordinat_lat }}', '{{ $area->koordinat_lng }}', '{{ $area->wilayah }}')">
+                    <h3 class="font-bold text-lg mb-2">{{ $area->wilayah }}</h3>
                     <p class="text-sm mb-2">Status: 
-                        <span class="{{ $riskColor }} font-bold">{{ $riskText }}</span>
+                        <span class="
+                            {{ $area->rumah_tidak_aman > 5 ? 'text-red-600 font-bold' : 
+                               ($area->rumah_tidak_aman > 2 ? 'text-yellow-600 font-bold' : 'text-green-600 font-bold') }}">
+                            {{ $area->rumah_tidak_aman > 5 ? 'Rawan Tinggi' : 
+                               ($area->rumah_tidak_aman > 2 ? 'Rawan Sedang' : 'Aman') }}
+                        </span>
                     </p>
-                    <p class="text-sm">Rumah Tidak Aman: {{ $area->rumah_tidak_aman }}</p>
-                    <p class="text-sm mt-2">Total Rumah: {{ $area->total_rumah }}</p>
+                    <p class="text-sm">Rumah Tidak Aman: <strong>{{ $area->rumah_tidak_aman }}</strong></p>
+                    <p class="text-sm mt-1">Total Rumah: {{ $area->total_rumah }}</p>
+                    <p class="text-xs text-gray-500 mt-2">Klik untuk lihat di peta</p>
                 </div>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-8">
+                <p class="text-gray-500">Belum ada data wilayah rawan DBD</p>
+            </div>
+        @endif
     </div>
 </div>
+@endsection
 
-<!-- JavaScript Data -->
+@section('scripts')
 <script>
-    const appDataElement = document.getElementById('app-data');
-    
-    window.appData = {
-        trackingData: JSON.parse(appDataElement.dataset.tracking || '[]'),
-        rawanAreas: JSON.parse(appDataElement.dataset.rawanAreas || '[]'),
-        userLocation: JSON.parse(appDataElement.dataset.userLocation || '[]'),
-        caseData: JSON.parse(appDataElement.dataset.caseData || '[]')
+// Global variables
+window.appData = {
+        userLocation: {
+            lat: <?php echo isset($user_location['lat']) ? $user_location['lat'] : -7.2575; ?>,
+            lng: <?php echo isset($user_location['lng']) ? $user_location['lng'] : 112.7521; ?>,
+            title: <?php echo json_encode(isset($user_location['title']) ? $user_location['title'] : 'Lokasi Anda'); ?>,
+            kecamatan: <?php echo json_encode(isset($user_location['kecamatan']) ? $user_location['kecamatan'] : ''); ?>,
+            kelurahan: <?php echo json_encode(isset($user_location['kelurahan']) ? $user_location['kelurahan'] : ''); ?>
+        },
+        trackingData: <?php echo json_encode(isset($tracking_data) ? $tracking_data : []); ?>,
+        caseData: <?php echo json_encode(isset($case_data) ? $case_data : []); ?>
     };
-    
-    // Debug: Log data to console
-    console.log('Tracking Data:', window.appData.trackingData);
-    console.log('Rawan Areas:', window.appData.rawanAreas);
-    console.log('User Location:', window.appData.userLocation);
-    console.log('Case Data:', window.appData.caseData);
+// Get data from window.appData
+const trackingData = window.appData.trackingData;
+const rawanAreas = window.appData.rawanAreas;
+const userLocation = window.appData.userLocation;
+const csrfToken = window.appData.csrfToken;
+const allRtCoordinates = window.appData.allRtCoordinates;
 
-    // Get data from window object
-    const trackingData = window.appData.trackingData;
-    const rawanAreas = window.appData.rawanAreas;
-    const userLocation = window.appData.userLocation;
-    const caseData = window.appData.caseData;
+// Initialize Chart
+const ctx = document.getElementById('caseChart').getContext('2d');
+let caseChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: window.appData.caseData.labels,
+        datasets: [{
+            label: 'Kasus DBD',
+            data: window.appData.caseData.values,
+            backgroundColor: '#3B82F6',
+            borderColor: '#1D4ED8',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Jumlah Kasus' }
+            },
+            x: {
+                title: { display: true, text: 'Periode' }
+            }
+        }
+    }
+});
 
-    // Initialize Map with Leaflet
-    let map;
-    let wilayahMarker = null;
+// Initialize Map with Leaflet
+let map;
+let wilayahMarker = null;
+let userMarker = null;
+let trackingMarkers = [];
+let areaCircles = [];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize map centered on Surabaya
-        map = L.map('map').setView([-7.2575, 112.7521], 13);
+function initializeMap() {
+    // Initialize map centered on Surabaya
+    map = L.map('map').setView([
+        window.appData.defaultCoordinates.lat, 
+        window.appData.defaultCoordinates.lng
+    ], 12);
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-        // Custom icons
+    // Set map bounds based on all RT coordinates if available
+    if (allRtCoordinates && allRtCoordinates.length > 0) {
+        const bounds = L.latLngBounds(allRtCoordinates);
+        map.fitBounds(bounds, { padding: [20, 20] });
+    }
+
+    // Add markers
+    addUserMarker();
+    addTrackingMarkers();
+    addRawanAreaCircles();
+}
+
+function addUserMarker() {
+    if (userLocation.lat && userLocation.lng) {
         const userIcon = L.divIcon({
             className: 'user-icon',
             html: '<div style="background-color: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
             iconSize: [26, 26]
         });
 
-        const safeIcon = L.divIcon({
-            className: 'safe-icon',
-            html: '<div style="background-color: #16a34a; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>',
-            iconSize: [20, 20]
-        });
+        userMarker = L.marker([userLocation.lat, userLocation.lng], {
+            icon: userIcon,
+            title: userLocation.title
+        }).addTo(map).bindPopup(`
+            <div style="width: 250px;">
+                <h3 style="color: #3B82F6; margin-bottom: 8px;">${userLocation.title}</h3>
+                <p><strong>Wilayah Anda:</strong></p>
+                <p>RT ${userLocation.rt}/RW ${userLocation.rw}</p>
+                <p>${userLocation.kelurahan}, ${userLocation.kecamatan}</p>
+            </div>
+        `);
+    }
+}
 
-        const dangerIcon = L.divIcon({
-            className: 'danger-icon',
-            html: '<div style="background-color: #dc2626; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>',
-            iconSize: [20, 20]
-        });
+function addTrackingMarkers() {
+    // Clear existing markers
+    trackingMarkers.forEach(marker => map.removeLayer(marker));
+    trackingMarkers = [];
 
-        // Add user marker if coordinates exist
-        if (userLocation && userLocation.lat && userLocation.lng) {
-            const userMarker = L.marker([userLocation.lat, userLocation.lng], {
-                icon: userIcon,
-                title: userLocation.title || 'Lokasi Anda'
-            }).addTo(map).bindPopup(`
-                <div style="width: 250px;">
-                    <b>${userLocation.title || 'Lokasi Anda'}</b>
-                    <p><b>Wilayah Anda:</b></p>
-                    <p>RT ${userLocation.rt || ''}/RW ${userLocation.rw || ''}</p>
-                    <p>${userLocation.kelurahan || ''}, ${userLocation.kecamatan || ''}</p>
-                </div>
-            `);
-        }
-
-        // Add tracking markers
-        if (trackingData && Array.isArray(trackingData)) {
-            trackingData.forEach(data => {
-                if (!data.lat || !data.lng) return;
-                
-                let icon;
-                let statusText = '';
-                let additionalInfo = '';
-                
-                if (data.kategori_masalah === 'Tidak Aman') {
-                    icon = dangerIcon;
-                    statusText = '<span class="status-tidak-aman">TIDAK AMAN</span>';
-                    additionalInfo = `<p><b>Masalah:</b> ${data.deskripsi || 'Lingkungan kotor'}</p>`;
-                } else {
-                    icon = safeIcon;
-                    statusText = '<span class="status-aman">AMAN</span>';
-                    additionalInfo = '<p>Tidak ada masalah yang dilaporkan</p>';
-                }
-                
-                const marker = L.marker([data.lat, data.lng], {
-                    icon: icon
-                }).addTo(map).bindPopup(`
-                    <div style="width: 250px;">
-                        <h3>Rumah ${data.nama_warga || 'Tidak Diketahui'}</h3>
-                        <p><b>Status:</b> ${statusText}</p>
-                        <p><b>Wilayah:</b> RT ${data.rt || ''}/RW ${data.rw || ''}, ${data.kelurahan || ''}, ${data.kecamatan || ''}</p>
-                        ${additionalInfo}
-                        <p><b>Terakhir Dipantau:</b> ${data.tanggal ? new Date(data.tanggal).toLocaleDateString() : 'Tidak diketahui'}</p>
-                    </div>
-                `);
-            });
-        }
-
-        // Add high risk areas as circles
-        if (rawanAreas && Array.isArray(rawanAreas)) {
-            rawanAreas.forEach(area => {
-                if (area.koordinat_lat && area.koordinat_lng) {
-                    const color = area.rumah_tidak_aman > 5 ? '#FF0000' : 
-                                (area.rumah_tidak_aman > 2 ? '#FFA500' : '#00FF00');
-                    
-                    const circle = L.circle([area.koordinat_lat, area.koordinat_lng], {
-                        color: color,
-                        fillColor: color,
-                        fillOpacity: 0.3,
-                        radius: 200
-                    }).addTo(map).bindPopup(`
-                        <div style="width: 250px;">
-                            <h3>${area.wilayah || 'Wilayah Tidak Diketahui'}</h3>
-                            <p><b>Status:</b> 
-                                ${area.rumah_tidak_aman > 5 ? 'Rawan Tinggi' : 
-                                 area.rumah_tidak_aman > 2 ? 'Rawan Sedang' : 'Aman'}
-                            </p>
-                            <p><b>Rumah Tidak Aman:</b> ${area.rumah_tidak_aman || 0}</p>
-                            <p><b>Total Rumah:</b> ${area.total_rumah || 0}</p>
-                        </div>
-                    `);
-                }
-            });
-        }
-
-        // Initialize Chart
-        initializeChart();
+    const safeIcon = L.divIcon({
+        className: 'safe-icon',
+        html: '<div style="background-color: #16a34a; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>',
+        iconSize: [20, 20]
     });
 
-    function initializeChart() {
-        const ctx = document.getElementById('caseChart');
-        if (!ctx) return;
-        
-        const chartCtx = ctx.getContext('2d');
-        
-        // Process case data for chart
-        let labels = [];
-        let data = [];
-        
-        if (caseData && Array.isArray(caseData)) {
-            caseData.forEach(item => {
-                if (item.tanggal) {
-                    labels.push(new Date(item.tanggal).toLocaleDateString());
-                } else if (item.bulan) {
-                    labels.push(item.bulan);
-                } else if (item.minggu) {
-                    labels.push(`Minggu ${item.minggu}`);
-                }
-                data.push(item.jumlah || 0);
-            });
+    const dangerIcon = L.divIcon({
+        className: 'danger-icon',
+        html: '<div style="background-color: #dc2626; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>',
+        iconSize: [20, 20]
+    });
 
-            // Reverse arrays to show chronological order
-            labels.reverse();
-            data.reverse();
-        }
+    if (trackingData && trackingData.length > 0) {
+        trackingData.forEach(data => {
+            let icon;
+            let statusText = '';
+            let additionalInfo = '';
+            
+            if (data.kategori_masalah === 'Tidak Aman') {
+                icon = dangerIcon;
+                statusText = '<span class="status-tidak-aman">TIDAK AMAN</span>';
+                additionalInfo = `<p><strong>Masalah:</strong> ${data.deskripsi || 'Lingkungan kotor'}</p>`;
+            } else {
+                icon = safeIcon;
+                statusText = '<span class="status-aman">AMAN</span>';
+                additionalInfo = '<p>Tidak ada masalah yang dilaporkan</p>';
+            }
+            
+            const marker = L.marker([data.lat, data.lng], {
+                icon: icon
+            }).addTo(map).bindPopup(`
+                <div style="width: 250px;">
+                    <h3>${data.nama_warga}</h3>
+                    <p><strong>Status:</strong> ${statusText}</p>
+                    <p><strong>Wilayah:</strong> RT ${data.rt}/RW ${data.rw}</p>
+                    <p><strong>Kelurahan:</strong> ${data.kelurahan}</p>
+                    <p><strong>Kecamatan:</strong> ${data.kecamatan}</p>
+                    ${additionalInfo}
+                    <p><strong>Terakhir Dipantau:</strong> ${new Date(data.tanggal).toLocaleDateString('id-ID')}</p>
+                </div>
+            `);
+            
+            trackingMarkers.push(marker);
+        });
+    }
+}
 
-        const caseChart = new Chart(chartCtx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Kasus Tidak Aman',
-                    data: data,
-                    backgroundColor: '#3B82F6',
-                    borderColor: '#1D4ED8',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+function addRawanAreaCircles() {
+    // Clear existing circles
+    areaCircles.forEach(circle => map.removeLayer(circle));
+    areaCircles = [];
+
+    if (rawanAreas && rawanAreas.length > 0) {
+        rawanAreas.forEach(area => {
+            if (area.koordinat_lat && area.koordinat_lng) {
+                let color, fillColor, radius;
+                
+                if (area.rumah_tidak_aman > 5) {
+                    color = '#DC2626';
+                    fillColor = '#FEE2E2';
+                    radius = 300;
+                } else if (area.rumah_tidak_aman > 2) {
+                    color = '#F59E0B';
+                    fillColor = '#FEF3C7';
+                    radius = 200;
+                } else {
+                    color = '#16A34A';
+                    fillColor = '#DCFCE7';
+                    radius = 150;
                 }
+                
+                const circle = L.circle([area.koordinat_lat, area.koordinat_lng], {
+                    color: color,
+                    fillColor: fillColor,
+                    fillOpacity: 0.4,
+                    radius: radius,
+                    weight: 2
+                }).addTo(map).bindPopup(`
+                    <div style="width: 250px;">
+                        <h3>${area.wilayah}</h3>
+                        <p><strong>Status:</strong> 
+                            <span style="color: ${color}; font-weight: bold;">
+                                ${area.rumah_tidak_aman > 5 ? 'Rawan Tinggi' : 
+                                 area.rumah_tidak_aman > 2 ? 'Rawan Sedang' : 'Aman'}
+                            </span>
+                        </p>
+                        <p><strong>Rumah Tidak Aman:</strong> ${area.rumah_tidak_aman}</p>
+                        <p><strong>Total Rumah:</strong> ${area.total_rumah}</p>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            Persentase: ${((area.rumah_tidak_aman / area.total_rumah) * 100).toFixed(1)}%
+                        </p>
+                    </div>
+                `);
+                
+                areaCircles.push(circle);
             }
         });
     }
+}
 
-    // Search functionality
-    document.getElementById('btnCari').addEventListener('click', function() {
-        const kecamatan = document.getElementById('kecamatan').value;
-        const kelurahan = document.getElementById('kelurahan').value;
-        const rw = document.getElementById('rw').value;
-        const rt = document.getElementById('rt').value;
-        
-        if (!kecamatan) {
-            alert('Pilih kecamatan terlebih dahulu');
-            return;
+function focusAreaOnMap(lat, lng, nama) {
+    if (map) {
+        map.setView([lat, lng], 16);
+        // Find and open popup for this area
+        areaCircles.forEach(circle => {
+            const circleLatLng = circle.getLatLng();
+            if (Math.abs(circleLatLng.lat - lat) < 0.001 && Math.abs(circleLatLng.lng - lng) < 0.001) {
+                circle.openPopup();
+            }
+        });
+    }
+}
+
+// Initialize everything when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+    
+    // Map control buttons
+    document.getElementById('btnResetMap').addEventListener('click', function() {
+        if (allRtCoordinates && allRtCoordinates.length > 0) {
+            const bounds = L.latLngBounds(allRtCoordinates);
+            map.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+            map.setView([window.appData.defaultCoordinates.lat, window.appData.defaultCoordinates.lng], 12);
         }
-        
-        // AJAX request to get coordinates
-        $.ajax({
-            url: '{{ route("lokasi.coordinates") }}',
-            type: 'POST',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                kecamatan_id: kecamatan,
-                kelurahan_id: kelurahan,
-                rw_id: rw,
-                rt_id: rt
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Remove previous marker if exists
-                    if (wilayahMarker) {
-                        map.removeLayer(wilayahMarker);
-                    }
-                    
-                    // Filter tracking data for this area
-                    const wilayahTrackingData = trackingData.filter(item => {
-                        let match = true;
-                        if (kecamatan) match = match && (item.kecamatan_id == kecamatan);
-                        if (kelurahan) match = match && (item.kelurahan_id == kelurahan);
-                        if (rw) match = match && (item.rw_id == rw);
-                        if (rt) match = match && (item.rt_id == rt);
-                        return match;
-                    });
-                    
-                    // Calculate area status
-                    let rumahTidakAman = 0;
-                    
-                    wilayahTrackingData.forEach(data => {
-                        if (data.kategori_masalah === 'Tidak Aman') rumahTidakAman++;
-                    });
-                    
-                    // Determine status and color
-                    let status, color;
-                    if (rumahTidakAman > 5) {
-                        status = 'Rawan Tinggi';
-                        color = '#FF0000';
-                    } else if (rumahTidakAman > 2) {
-                        status = 'Rawan Sedang';
-                        color = '#FFA500';
+    });
+    
+    document.getElementById('btnUserLocation').addEventListener('click', function() {
+        if (userLocation.lat && userLocation.lng) {
+            map.setView([userLocation.lat, userLocation.lng], 16);
+            if (userMarker) {
+                userMarker.openPopup();
+            }
+        }
+    });
+});
+
+// Period select change
+document.getElementById('period-select').addEventListener('change', function() {
+    const period = this.value;
+    
+    // Update chart data via AJAX
+    fetch('{{ route("warga.lokasi.update-period") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ period: period })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            caseChart.data.labels = data.data.map(item => item.label);
+            caseChart.data.datasets[0].data = data.data.map(item => item.value);
+            caseChart.update();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating chart:', error);
+    });
+});
+
+$(document).ready(function() {
+    // CSRF Token
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+    // Helper function to enable/disable dropdown
+    function toggleDropdown(elementId, enabled, loadingId = null) {
+        const element = $('#' + elementId);
+        const loading = loadingId ? $('#' + loadingId) : null;
+
+        if (enabled) {
+            element.prop('disabled', false).removeClass('dropdown-disabled');
+            if (loading) loading.addClass('hidden');
+        } else {
+            element.prop('disabled', true).addClass('dropdown-disabled');
+            if (loading) loading.removeClass('hidden');
+        }
+    }
+
+    // Update button state
+    function updateSearchButton() {
+        const hasKecamatan = $('#kecamatan').val();
+        $('#btnCari').prop('disabled', !hasKecamatan);
+    }
+
+    // Reset dependent dropdowns
+    function resetDependentDropdowns(startFrom) {
+        if (startFrom === 'kecamatan') {
+            $('#kelurahan').html('<option value="">Pilih Kelurahan</option>');
+            $('#rw').html('<option value="">Pilih RW</option>');
+            $('#rt').html('<option value="">Pilih RT</option>');
+            toggleDropdown('kelurahan', false);
+            toggleDropdown('rw', false);
+            toggleDropdown('rt', false);
+        } else if (startFrom === 'kelurahan') {
+            $('#rw').html('<option value="">Pilih RW</option>');
+            $('#rt').html('<option value="">Pilih RT</option>');
+            toggleDropdown('rw', false);
+            toggleDropdown('rt', false);
+        } else if (startFrom === 'rw') {
+            $('#rt').html('<option value="">Pilih RT</option>');
+            toggleDropdown('rt', false);
+        }
+        updateSearchButton();
+    }
+
+    // Kecamatan change
+    $('#kecamatan').change(function() {
+        const kecamatan_id = $(this).val();
+        resetDependentDropdowns('kecamatan');
+
+        if (kecamatan_id) {
+            toggleDropdown('kelurahan', false, 'kelurahan-loading');
+
+            $.ajax({
+                url: '{{ route("warga.lokasi.kelurahan") }}',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    kecamatan_id: kecamatan_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#kelurahan').html(data.options);
+                        toggleDropdown('kelurahan', true, 'kelurahan-loading');
                     } else {
-                        status = 'Aman';
-                        color = '#00FF00';
+                        $('#kelurahan').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('kelurahan', false, 'kelurahan-loading');
                     }
-                    
-                    // Add marker for searched area
-                    wilayahMarker = L.marker([response.lat, response.lng], {
-                        icon: L.divIcon({
-                            className: 'wilayah-icon',
-                            html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
-                            iconSize: [30, 30]
-                        })
-                    }).addTo(map).bindPopup(`
-                        <div style="width: 250px;">
-                            <b>${response.nama_wilayah}</b>
-                            <p><b>Status:</b> <span style="color: ${color}; font-weight: bold;">${status}</span></p>
-                            <p><b>Rumah Tidak Aman:</b> ${rumahTidakAman}</p>
-                            <p><b>Total Rumah Dipantau:</b> ${wilayahTrackingData.length}</p>
-                        </div>
-                    `);
-                    
-                    // Zoom to selected area
-                    map.setView([response.lat, response.lng], 16);
-                    
+                    updateSearchButton();
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#kelurahan').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('kelurahan', false, 'kelurahan-loading');
+                    updateSearchButton();
+                }
+            });
+        }
+    });
+
+    // Kelurahan change
+    $('#kelurahan').change(function() {
+        const kelurahan_id = $(this).val();
+        resetDependentDropdowns('kelurahan');
+
+        if (kelurahan_id) {
+            toggleDropdown('rw', false, 'rw-loading');
+
+            $.ajax({
+                url: '{{ route("warga.lokasi.rw") }}',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    kelurahan_id: kelurahan_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#rw').html(data.options);
+                        toggleDropdown('rw', true, 'rw-loading');
+                    } else {
+                        $('#rw').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('rw', false, 'rw-loading');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#rw').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('rw', false, 'rw-loading');
+                }
+            });
+        }
+    });
+
+    // RW change
+    $('#rw').change(function() {
+        const rw_id = $(this).val();
+        resetDependentDropdowns('rw');
+
+        if (rw_id) {
+            toggleDropdown('rt', false, 'rt-loading');
+
+            $.ajax({
+                url: '{{ route("warga.lokasi.rt") }}',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    rw_id: rw_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#rt').html(data.options);
+                        toggleDropdown('rt', true, 'rt-loading');
+                    } else {
+                        $('#rt').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('rt', false, 'rt-loading');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#rt').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('rt', false, 'rt-loading');
+                }
+            });
+        }
+    });
+
+    // Button Cari click handler
+    $('#btnCari').click(function() {
+        const kecamatan_id = $('#kecamatan').val();
+        const kelurahan_id = $('#kelurahan').val();
+        const rw_id = $('#rw').val();
+        const rt_id = $('#rt').val();
+
+        $.ajax({
+            url: '{{ route("warga.lokasi.wilayah-koordinat") }}',
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            data: {
+                kecamatan_id: kecamatan_id,
+                kelurahan_id: kelurahan_id,
+                rw_id: rw_id,
+                rt_id: rt_id
+            },
+            success: function(data) {
+                if (data.success) {
+                    // Remove existing wilayah marker
+                    if (window.wilayahMarker) {
+                        window.map.removeLayer(window.wilayahMarker);
+                    }
+
+                    // Add new marker
+                    const markerIcon = L.divIcon({
+                        className: 'wilayah-icon',
+                        html: '<div style="background-color: #8B5CF6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                        iconSize: [26, 26]
+                    });
+
+                    window.wilayahMarker = L.marker([data.lat, data.lng], {
+                        icon: markerIcon
+                    }).addTo(window.map)
+                    .bindPopup(`<b>${data.nama_wilayah}</b>`)
+                    .openPopup();
+
+                    // Zoom to the marker
+                    window.map.setView([data.lat, data.lng], 16);
                 } else {
-                    alert('Wilayah tidak ditemukan');
+                    alert(data.message || 'Gagal menemukan koordinat wilayah');
                 }
             },
-            error: function() {
-                alert('Gagal memuat data wilayah');
+            error: function(xhr) {
+                console.error('Error:', xhr.responseText);
+                alert('Terjadi kesalahan saat memproses permintaan');
             }
         });
     });
 
-    // Period select change
-    document.getElementById('period-select').addEventListener('change', function() {
-        window.location.href = `{{ route('warga.lokasi') }}?period=${this.value}`;
-    });
-
-    // Dynamic dropdowns with jQuery
-    $(document).ready(function() {
-        // Set CSRF token for AJAX requests
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-
-        // Kecamatan dropdown change event
-        $('#kecamatan').change(function() {
-            var kecamatan_id = $(this).val();
-            if(kecamatan_id) {
-                $.ajax({
-                    url: '{{ route("lokasi.kelurahan") }}',
-                    type: 'POST',
-                    data: {kecamatan_id: kecamatan_id},
-                    success: function(data) {
-                        $('#kelurahan').html(data).prop('disabled', false);
-                        $('#rw').html('<option value="">Pilih RW</option>').prop('disabled', true);
-                        $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", status, error);
-                        alert('Gagal memuat data kelurahan. Silakan coba lagi.');
-                    }
-                });
-            } else {
-                $('#kelurahan, #rw, #rt').html('<option value="">Pilih terlebih dahulu</option>').prop('disabled', true);
-            }
-        });
-
-        // Kelurahan dropdown change event
-        $('#kelurahan').change(function() {
-            var kelurahan_id = $(this).val();
-            if(kelurahan_id) {
-                $.ajax({
-                    url: '{{ route("lokasi.rw") }}',
-                    type: 'POST',
-                    data: {kelurahan_id: kelurahan_id},
-                    success: function(data) {
-                        $('#rw').html(data).prop('disabled', false);
-                        $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", status, error);
-                        alert('Gagal memuat data RW. Silakan coba lagi.');
-                    }
-                });
-            } else {
-                $('#rw, #rt').html('<option value="">Pilih terlebih dahulu</option>').prop('disabled', true);
-            }
-        });
-
-        // RW dropdown change event
-        $('#rw').change(function() {
-            var rw_id = $(this).val();
-            if(rw_id) {
-                $.ajax({
-                    url: '{{ route("lokasi.rt") }}',
-                    type: 'POST',
-                    data: {rw_id: rw_id},
-                    success: function(data) {
-                        $('#rt').html(data).prop('disabled', false);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", status, error);
-                        alert('Gagal memuat data RT. Silakan coba lagi.');
-                    }
-                });
-            } else {
-                $('#rt').html('<option value="">Pilih terlebih dahulu</option>').prop('disabled', true);
-            }
-        });
-    });
+    // Initialize button state
+    updateSearchButton();
+});
 </script>
 @endsection

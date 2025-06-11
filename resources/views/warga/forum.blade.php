@@ -1,275 +1,358 @@
 @extends('layouts.warga')
 
-@section('content')
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-    <!-- Header Section -->
-    <div class="mb-8 animate-fade-in">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Forum Diskusi DBD</h1>
-        <p class="text-lg text-gray-600">Berbagi informasi dan pengalaman tentang pencegahan DBD</p>
-    </div>
-    
-    <!-- Search and New Post -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 animate-slide-in">
-        <form method="GET" action="{{ route('warga.forum.index') }}" class="mb-6">
-            <div class="flex">
-                <input type="text" name="search" placeholder="Cari topik diskusi..." value="{{ $search }}" 
-                       class="flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition btn-hover flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    Cari
-                </button>
-            </div>
-        </form>
-        
-        <button id="togglePostForm" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition btn-hover flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Buat Postingan Baru
-        </button>
-        
-        <!-- New Post Form (Hidden by default) -->
-        <form id="postForm" method="POST" action="{{ route('warga.forum.store') }}" enctype="multipart/form-data" class="mt-6 hidden">
-            @csrf
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2">Topik <span class="text-red-500">*</span></label>
-                <input type="text" name="topik" required placeholder="Masukkan judul topik" 
-                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2">Pesan <span class="text-red-500">*</span></label>
-                <textarea name="pesan" required placeholder="Tulis isi postingan Anda..." 
-                          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2">Gambar (Opsional)</label>
-                <input type="file" name="gambar" id="gambarInput" accept="image/*" class="hidden">
-                <div class="flex items-center space-x-4">
-                    <label for="gambarInput" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-300 transition btn-hover">
-                        Pilih Gambar
-                    </label>
-                    <span id="fileName" class="text-gray-500 text-sm">Tidak ada file dipilih</span>
-                </div>
-                <div id="imagePreview" class="mt-2 hidden">
-                    <img id="previewImage" src="#" alt="Preview Gambar" class="image-preview rounded-lg border">
-                </div>
-            </div>
-            <div class="flex justify-end space-x-3">
-                <button type="button" id="cancelPost" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition btn-hover">
-                    Batal
-                </button>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition btn-hover flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                    </svg>
-                    Posting
-                </button>
-            </div>
-        </form>
-    </div>
-    
-    <!-- Posts List -->
-    <div class="space-y-6" id="postsContainer">
-        @forelse ($posts as $post)
-        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover animate-fade-in">
-            <div class="p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <h3 class="text-xl font-semibold text-gray-800">{{ $post->topik }}</h3>
-                        <p class="text-gray-500 text-sm">
-    Oleh: {{ $post->warga_nama ?? 'Anonim' }}   
-    {{ \Carbon\Carbon::parse($post->dibuat_pada)->format('d M Y H:i') }}
-</p>
+@section('title', 'Forum Diskusi - DengueCare')
 
-                    </div>
-                </div>
-                
-                <div class="prose max-w-none mb-6">
-                    {!! nl2br(e($post->pesan)) !!}
-                </div>
-                
-                @if ($post->gambar)
-                <div class="mb-6">
-                <img src="{{ asset('storage/' . $post->gambar) }}" 
-     alt="Gambar postingan" 
-     class="max-w-full h-auto rounded-lg border image-preview cursor-pointer"
-     @onclick="showImageModal('{{ asset('storage/' . $post->gambar) }}')">
-                </div>
-                @endif
-                
-                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                    <div class="post-actions flex space-x-4">
-                        <button class="flex items-center text-gray-500 hover:text-blue-500 toggle-comments" data-post-id="{{ $post->id }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span>Komentar ({{ $post->comments_count }})</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Comments Section -->
-                <div class="mt-4 pt-4 border-t border-gray-100 hidden comments-section" data-post-id="{{ $post->id }}">
-                    <div class="space-y-4" id="comments-{{ $post->id }}">
-                    @foreach ($comments[$post->id] ?? [] as $comment)
-                    <div class="comment-indent">
-    <div class="flex">
-        <div class="flex-shrink-0 mr-3">
-            <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <span class="text-gray-600 text-sm">{{ substr($comment->warga_nama ?? 'Anonim', 0, 2) }}</span>
-            </div>
-        </div>
-        <div class="bg-gray-50 rounded-lg p-3 flex-grow">
-            <div class="flex justify-between items-start">
-                <h4 class="font-medium text-gray-800">{{ $comment->warga_nama ?? 'Anonim' }}</h4>
-                <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($comment->dibuat_pada)->format('d M Y H:i') }}</span>
-            </div>
-            <p class="text-gray-600 mt-1">{!! nl2br(e($comment->pesan)) !!}</p>
-            @if ($comment->gambar)
-            <div class="mt-2">
-                <img src="{{ asset('storage/' . $comment->gambar) }}" 
-                     alt="Gambar komentar" 
-                     class="max-w-xs h-auto rounded-lg border cursor-pointer"
-                     @onclick="showImageModal('{{ asset('storage/' . $comment->gambar) }}')">
-            </div>
-            @endif
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-8 mb-8 shadow-lg animate-fade-in">
+        <div class="max-w-3xl mx-auto text-center">
+            <h1 class="text-4xl font-bold text-white mb-4">Forum Diskusi DBD</h1>
+            <p class="text-xl text-blue-100 mb-6">Berbagi informasi, pengalaman, dan tips tentang pencegahan & penanganan Demam Berdarah</p>
+            <!-- Search Box -->
+            <form method="GET" class="bg-white flex items-center px-4 py-2 rounded-full max-w-md mx-auto shadow-sm">
+                <input type="text" name="search" placeholder="Cari diskusi..." 
+                       class="flex-grow px-3 py-2 bg-transparent outline-none text-gray-800" 
+                       value="{{ request('search') }}">
+                <button type="submit" class="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
         </div>
     </div>
-</div>
-                    @endforeach
-                        @empty
-                        <p class="text-gray-500 text-center py-4">Belum ada komentar</p>
-                        @endforelse
-                        
-                        <!-- Comment Form -->
-                        <div class="flex mt-6">
-                            <div class="flex-shrink-0 mr-3">
-                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <span class="text-blue-600 text-sm">{{ substr(Auth::user()->nama_lengkap, 0, 2) }}</span>
-                                </div>
+    
+    <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row gap-8">
+        <div class="flex-grow">
+            <!-- New Post Card (Hidden by default) -->
+            <div id="newPostCard" class="bg-white rounded-xl shadow-md mb-6 hidden">
+                <form method="POST" action="{{ route('forum.post.store') }}" enctype="multipart/form-data" class="p-6">
+                    @csrf
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-semibold">
+                            {{ substr(auth('warga')->user()->nama_lengkap ?? 'User', 0, 2) }}
+                        </div>
+                        <div class="flex-grow">
+                            <input type="text" name="topik" required placeholder="Judul diskusi" 
+                                   class="w-full px-4 py-3 border-b border-gray-200 focus:outline-none focus:border-blue-500 text-lg font-semibold mb-3">
+                            <textarea name="pesan" required placeholder="Apa yang ingin Anda diskusikan?" 
+                                      class="w-full px-0 py-2 border-0 focus:ring-0 focus:outline-none text-gray-800 whitespace-pre-wrap resize-none"
+                                      rows="3"></textarea>
+                            
+                            <div id="imagePreview" class="mt-4 hidden relative">
+                                <img id="previewImage" src="#" alt="Preview Gambar" class="rounded-lg w-full max-h-96 object-contain">
+                                <button type="button" onclick="removeImage()" class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md text-red-500 hover:bg-red-50">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
-                            <div class="flex-grow">
-                                <form method="POST" action="{{ route('warga.forum.store') }}" class="flex">
-                                    @csrf
-                                    <input type="hidden" name="parent_id" value="{{ $post->id }}">
-                                    <input type="text" name="pesan" required placeholder="Tulis komentar..." 
-                                        class="flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                        </svg>
-                                    </button>
-                                </form>
+                            
+                            <div class="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+                                <div class="flex space-x-2">
+                                    <label for="gambarInput" class="cursor-pointer text-gray-500 hover:text-blue-500 p-2 rounded-full hover:bg-blue-50 transition">
+                                        <i class="far fa-image fa-lg"></i>
+                                        <input type="file" name="gambar" id="gambarInput" accept="image/*" class="hidden">
+                                    </label>
+                                </div>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-full font-medium transition">
+                                    Posting Diskusi
+                                </button>
                             </div>
                         </div>
                     </div>
+                </form>
+            </div>
+            
+            <!-- Discussion List -->
+            <div class="space-y-6" id="postsContainer">
+                @forelse($posts as $post)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 card-hover animate-fade-in" data-animation-delay="{{ $loop->index * 0.1 }}">
+                    <div class="p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 font-semibold">
+                                {{ substr($post->warga->nama_lengkap ?? 'User', 0, 2) }}
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">{{ $post->warga->nama_lengkap ?? 'Anonymous' }}</h3>
+                                        <span class="text-gray-500 text-sm">
+                                            {{ $post->dibuat_pada ? $post->dibuat_pada->translatedFormat('d M Y H:i') : 'Tanggal tidak tersedia' }}
+                                        </span>
+                                    </div>
+                                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs">Diskusi</span>
+                                </div>
+                                
+                                <h4 class="font-semibold text-xl mb-3 text-gray-800">{{ $post->topik }}</h4>
+                                <p class="text-gray-700 whitespace-pre-wrap mb-4">{{ $post->pesan }}</p>
+                                
+                                @if($post->gambar)
+                                <div class="mt-3">
+                                    <img src="{{ Storage::url($post->gambar) }}" 
+                                         alt="Gambar postingan" 
+                                         class="rounded-lg w-full max-h-96 object-contain cursor-zoom-in"
+                                         onclick="showImageModal('{{ Storage::url($post->gambar) }}')">
+                                </div>
+                                @endif
+                                
+                                <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                                    <button class="comment-btn flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition"
+                                            data-post-id="{{ $post->id }}">
+                                        <i class="far fa-comment"></i>
+                                        <span>{{ $post->comments->count() }} Komentar</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comment Section -->
+                    <div id="commentsSection-{{ $post->id }}" class="bg-gray-50 border-t border-gray-200 rounded-b-xl p-4 hidden">
+                        <!-- Comment Form -->
+                        <form method="POST" action="{{ route('forum.comment.store') }}" enctype="multipart/form-data" class="mb-4">
+                            @csrf
+                            <input type="hidden" name="parent_id" value="{{ $post->id }}">
+                            <div class="flex space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 font-semibold">
+                                    {{ substr(auth('warga')->user()->nama_lengkap ?? 'User', 0, 2) }}
+                                </div>
+                                <div class="flex-grow">
+                                    <textarea name="pesan" required placeholder="Tulis komentar Anda..." 
+                                              class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 resize-none"
+                                              rows="2"></textarea>
+                                    
+                                    <div id="commentImagePreview-{{ $post->id }}" class="mt-3 hidden relative">
+                                        <img id="commentPreviewImage-{{ $post->id }}" src="#" alt="Preview Gambar" class="rounded-lg w-full max-h-60 object-contain">
+                                        <button type="button" class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md text-red-500 hover:bg-red-50" data-post-id="{{ $post->id }}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between pt-3 mt-3">
+                                        <label for="commentGambarInput-{{ $post->id }}" class="cursor-pointer text-gray-500 hover:text-blue-500 p-2 rounded-full hover:bg-blue-50 transition">
+                                            <i class="far fa-image fa-lg"></i>
+                                            <input type="file" name="gambar" id="commentGambarInput-{{ $post->id }}" accept="image/*" class="hidden">
+                                        </label>
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-full font-medium transition">
+                                            Kirim Komentar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Comments List -->
+                        <div class="space-y-3 max-h-80 overflow-y-auto">
+                            @forelse($post->comments as $comment)
+                            <div class="bg-white p-3 rounded-lg border-l-4 border-blue-600">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-9 h-9 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 text-sm font-semibold">
+                                        {{ substr($comment->warga->nama_lengkap ?? 'User', 0, 2) }}
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-semibold text-gray-800">{{ $comment->warga->nama_lengkap ?? 'Anonymous' }}</span>
+                                            <span class="text-gray-500 text-xs">
+                                                {{ $comment->dibuat_pada ? $comment->dibuat_pada->translatedFormat('d M Y H:i') : 'Tanggal tidak tersedia' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-gray-700 mt-1 whitespace-pre-wrap">{{ $comment->pesan }}</p>
+                                        @if($comment->gambar)
+                                        <img src="{{ Storage::url($comment->gambar) }}" 
+                                             alt="Gambar komentar" 
+                                             class="mt-2 rounded-lg max-w-full max-h-60 cursor-zoom-in"
+                                             onclick="showImageModal('{{ Storage::url($comment->gambar) }}')">
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <p class="text-gray-500 text-center py-4">Belum ada komentar</p>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
+                @empty
+                <div class="bg-white rounded-xl shadow-sm p-12 text-center animate-fade-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <h3 class="text-xl font-medium text-gray-800 mb-2">Belum ada diskusi</h3>
+                    <p class="text-gray-500 mb-6">Mulailah diskusi pertama tentang pencegahan DBD</p>
+                    <button onclick="showNewPostForm()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-full font-medium inline-flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i> Buat Diskusi
+                    </button>
+                </div>
+                @endforelse
+
+                <!-- Pagination -->
+                @if($posts->hasPages())
+                <div class="mt-8">
+                    {{ $posts->withQueryString()->links() }}
+                </div>
+                @endif
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow-md p-12 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 class="text-lg font-medium text-gray-800 mt-4">Belum ada diskusi</h3>
-            <p class="text-gray-500 mt-1">Jadilah yang pertama memulai diskusi</p>
-            <button id="showPostForm" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition btn-hover">
-                Buat Postingan
-            </button>
-        </div>
     </div>
 </div>
+
+<!-- Floating Action Button -->
+<button onclick="showNewPostForm()" class="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center text-2xl z-40 transition hover:bg-blue-700 hover:shadow-xl hover:scale-105">
+    <i class="fas fa-plus"></i>
+</button>
 
 <!-- Image Modal -->
-<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-    <div class="relative max-w-4xl max-h-screen p-4">
-        <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-3xl">&times;</button>
-        <img id="modalImage" src="" alt="Gambar besar" class="max-w-full max-h-screen">
+<div id="imageModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black bg-opacity-75">
+    <div class="relative max-w-4xl w-full">
+        <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalImage" src="" alt="Gambar besar" class="max-w-full max-h-[90vh] mx-auto rounded-lg shadow-xl">
     </div>
 </div>
+@endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-        // Toggle new post form
-        document.getElementById('togglePostForm').addEventListener('click', function() {
-            const form = document.getElementById('postForm');
-            form.classList.toggle('hidden');
-            this.classList.toggle('hidden');
-            
-            if (!form.classList.contains('hidden')) {
-                form.scrollIntoView({ behavior: 'smooth' });
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Apply animation delays
+    document.querySelectorAll('[data-animation-delay]').forEach(function(element) {
+        const delay = element.getAttribute('data-animation-delay');
+        element.style.animationDelay = delay + 's';
+    });
+
+    // Setup comment toggle buttons
+    document.querySelectorAll('.comment-btn[data-post-id]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            toggleComments(postId);
         });
-        
-        document.getElementById('cancelPost').addEventListener('click', function() {
-            document.getElementById('postForm').classList.add('hidden');
-            document.getElementById('togglePostForm').classList.remove('hidden');
-        });
-        
-        document.getElementById('showPostForm')?.addEventListener('click', function() {
-            document.getElementById('postForm').classList.remove('hidden');
-            document.getElementById('togglePostForm').classList.add('hidden');
-            document.getElementById('postForm').scrollIntoView({ behavior: 'smooth' });
-        });
-        
-        // Toggle comments
-        document.querySelectorAll('.toggle-comments').forEach(button => {
+    });
+
+    // Setup comment image preview event listeners
+    document.querySelectorAll('[id^="commentGambarInput-"]').forEach(function(input) {
+        const postId = input.id.replace('commentGambarInput-', '');
+        setupCommentImagePreview(postId);
+    });
+
+    // Setup remove comment image button event listeners
+    document.querySelectorAll('button[data-post-id]').forEach(function(button) {
+        if (button.querySelector('.fa-times')) {
             button.addEventListener('click', function() {
                 const postId = this.getAttribute('data-post-id');
-                const commentsSection = document.querySelector(`.comments-section[data-post-id="${postId}"]`);
-                commentsSection.classList.toggle('hidden');
-                
-                if (!commentsSection.classList.contains('hidden')) {
-                    commentsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
+                removeCommentImage(postId);
             });
-        });
+        }
+    });
+});
+
+// Show/hide new post form
+function showNewPostForm() {
+    const form = document.getElementById('newPostCard');
+    if (form.classList.contains('hidden')) {
+        form.classList.remove('hidden');
+        form.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('gambarInput').value = '';
+        document.getElementById('imagePreview').classList.add('hidden');
+    } else {
+        form.classList.add('hidden');
+    }
+}
+
+// Image preview for new post
+const gambarInput = document.getElementById('gambarInput');
+if (gambarInput) {
+    gambarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewContainer = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
         
-        // Image preview for new post
-        document.getElementById('gambarInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const fileName = document.getElementById('fileName');
-            const previewContainer = document.getElementById('imagePreview');
-            const previewImage = document.getElementById('previewImage');
+        if (file) {
+            previewContainer.classList.remove('hidden');
             
-            if (file) {
-                fileName.textContent = file.name;
-                previewContainer.classList.remove('hidden');
-                
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    previewImage.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                fileName.textContent = 'Tidak ada file dipilih';
-                previewContainer.classList.add('hidden');
-            }
-        });
-        
-        // Image modal functions
-        function showImageModal(src) {
-            document.getElementById('modalImage').src = src;
-            document.getElementById('imageModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
         }
-        
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Close modal when clicking outside image
-        document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageModal();
-            }
-        });
-    </script>
+    });
+}
 
+function removeImage() {
+    document.getElementById('gambarInput').value = '';
+    document.getElementById('imagePreview').classList.add('hidden');
+}
+
+// Image preview for comment
+function setupCommentImagePreview(postId) {
+    const input = document.getElementById('commentGambarInput-' + postId);
+    if (!input) return;
+    
+    input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewContainer = document.getElementById('commentImagePreview-' + postId);
+        const previewImage = document.getElementById('commentPreviewImage-' + postId);
+        
+        if (file) {
+            previewContainer.classList.remove('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function removeCommentImage(postId) {
+    const input = document.getElementById('commentGambarInput-' + postId);
+    const preview = document.getElementById('commentImagePreview-' + postId);
+    if (input) input.value = '';
+    if (preview) preview.classList.add('hidden');
+}
+
+// Image modal functions
+function showImageModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Toggle comments visibility
+function toggleComments(postId) {
+    const commentsSection = document.getElementById('commentsSection-' + postId);
+    commentsSection.classList.toggle('hidden');
+    
+    // Setup image preview for this comment form
+    setupCommentImagePreview(postId);
+    
+    // Scroll to comments if showing
+    if (!commentsSection.classList.contains('hidden')) {
+        setTimeout(() => {
+            commentsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+}
+
+// Auto-resize textareas
+document.querySelectorAll('textarea').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+
+// Close modal with ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
 @endpush
-
-@endsection

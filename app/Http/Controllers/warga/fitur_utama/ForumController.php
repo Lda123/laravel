@@ -1,91 +1,82 @@
 <?php
 
 namespace App\Http\Controllers\Warga\fitur_utama;
+
 use App\Http\Controllers\Controller;
+use App\Models\ForumPost;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ForumController extends Controller
 {
     public function index(Request $request)
-{
-    $search = $request->input('search', '');
+    {
+        $search = $request->query('search', '');
 
-    // Ambil postingan utama
-    $posts = DB::table('forum_post')
-        ->leftJoin('warga', 'forum_post.warga_id', '=', 'warga.id')
-        ->whereNull('forum_post.parent_id')
-        ->when($search, function ($query, $search) {
-            return $query->where(function ($q) use ($search) {
-                $q->where('forum_post.topik', 'like', "%{$search}%")
-                  ->orWhere('forum_post.pesan', 'like', "%{$search}%");
-            });
-        })
-        ->select(
-            'forum_post.*',
-            'warga.nama_lengkap as warga_nama'
-        )
-        ->orderBy('forum_post.dibuat_pada', 'desc')
-        ->get();
+        $posts = ForumPost::with(['warga', 'comments.warga'])
+            ->whereNull('parent_id')
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('topik', 'like', "%{$search}%")
+                      ->orWhere('pesan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('dibuat_pada', 'desc')
+            ->paginate(10);
 
-    // Hitung jumlah komentar
-    $commentsCount = DB::table('forum_post')
-        ->select('parent_id', DB::raw('COUNT(*) as total'))
-        ->whereNotNull('parent_id')
-        ->groupBy('parent_id')
-        ->pluck('total', 'parent_id');
-
-    foreach ($posts as $post) {
-        $post->comments_count = $commentsCount[$post->id] ?? 0;
+        return view('warga.forum', compact('posts', 'search'));
     }
 
-    // Ambil komentar
-    $comments = DB::table('forum_post')
-        ->leftJoin('warga', 'forum_post.warga_id', '=', 'warga.id')
-        ->whereNotNull('forum_post.parent_id')
-        ->orderBy('forum_post.dibuat_pada')
-        ->select(
-            'forum_post.*',
-            'warga.nama_lengkap as warga_nama'
-        )
-        ->get()
-        ->groupBy('parent_id');
-
-    return view('warga.forum', compact('posts', 'search', 'comments'));
-}
-
-
-    public function store(Request $request)
+    public function storePost(Request $request)
     {
         $request->validate([
-            'topik' => 'nullable|string|max:255',
+            'topik' => 'required|string|max:255',
             'pesan' => 'required|string',
-            'gambar' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'parent_id' => 'nullable|exists:forum_post,id', // untuk komentar
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
-    
-        $gambar_path = null;
-    
+
+        $imagePath = null;
         if ($request->hasFile('gambar')) {
-            $gambar_path = $request->file('gambar')->store('forum', 'public');
+            $imagePath = $this->storeImage($request->file('gambar'));
         }
-    
-        $postData = [
-            'warga_id'    => Auth::id(),
-            'topik'       => $request->input('parent_id') ? null : $request->input('topik'), // hanya post utama yang punya topik
-            'pesan'       => $request->input('pesan'),
-            'gambar'      => $gambar_path,
-            'dibuat_pada' => now(),
-            'parent_id'   => $request->input('parent_id'), // null jika post utama, berisi ID jika komentar
-        ];
-    
-        DB::table('forum_post')->insert($postData);
-    
-        return redirect()->route('warga.forum.index')->with('success', 'Postingan berhasil disimpan.');
+
+        ForumPost::create([
+            'warga_id' => auth('warga')->id(),
+            'topik' => $request->topik,
+            'pesan' => $request->pesan,
+            'gambar' => $imagePath,
+        ]);
+
+        return redirect()->route('warga.forum')->with('success', 'Diskusi berhasil diposting!');
     }
 
-    
-    
+    public function storeComment(Request $request)
+    {
+        $request->validate([
+            'parent_id' => 'required|exists:forum_post,id',
+            'pesan' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $imagePath = null;
+        if ($request->hasFile('gambar')) {
+            $imagePath = $this->storeImage($request->file('gambar'));
+        }
+
+        ForumPost::create([
+            'warga_id' => auth('warga')->id(),
+            'parent_id' => $request->parent_id,
+            'pesan' => $request->pesan,
+            'gambar' => $imagePath,
+        ]);
+
+        return back()->with('success', 'Komentar berhasil ditambahkan!');
+    }
+
+    private function storeImage($image)
+    {
+        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('forum/warga', $filename, 'public');
+        return $path;
+    }
 }

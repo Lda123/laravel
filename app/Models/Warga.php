@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -9,11 +7,12 @@ use Illuminate\Notifications\Notifiable;
 class Warga extends Authenticatable
 {
     use HasFactory, Notifiable;
-
+    
     protected $table = 'warga';
+    
     protected $fillable = [
         'nik',
-        'nama_lengkap', 
+        'nama_lengkap',
         'tempat_lahir',
         'tanggal_lahir',
         'jenis_kelamin',
@@ -70,14 +69,50 @@ class Warga extends Authenticatable
         return $this->belongsToMany(ListEvent::class, 'event_warga', 'id_warga', 'id_event');
     }
 
+    public function trackingHarians()
+    {
+        return $this->hasMany(TrackingHarian::class);
+    }
+
     public function forumPosts()
     {
         return $this->hasMany(ForumPost::class, 'warga_id');
     }
-// Accessor untuk profile picture
-public function getProfilePicAttribute($value)
-{
-    return $value ?: 'assets/img/default-profile.jpg';
-}
 
+    // Method untuk relasi ke tracking harian terbaru
+    public function latestStatus()
+    {
+        return $this->hasOne(TrackingHarian::class)->latest();
+    }
+
+    // Accessor untuk mendapatkan status terbaru sebagai string
+    public function getLatestStatusTextAttribute()
+    {
+        $latestTracking = $this->trackingHarian()->latest()->first();
+        return $latestTracking ? $latestTracking->status : 'Belum ada status';
+    }
+
+    // Method untuk mendapatkan tracking harian terbaru
+    public function getLatestTrackingAttribute()
+    {
+        return $this->trackingHarian()->latest()->first();
+    }
+
+    // Accessor untuk profile picture
+    public function getProfilePicAttribute($value)
+    {
+        return $value ?: '/images/default-profile.jpg';
+    }
+    // In App\Models\Warga
+
+    public function savedEdukasi()
+    {
+        return $this->belongsToMany(
+            Edukasi::class,
+            'saved_edukasi_warga',
+            'warga_id',
+            'edukasi_id'
+        )->withTimestamps()
+        ->withPivot('saved_at');
+    }
 }

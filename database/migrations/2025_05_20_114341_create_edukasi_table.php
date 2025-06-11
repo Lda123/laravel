@@ -18,7 +18,11 @@ return new class extends Migration
             $table->enum('tipe', ['Video', 'Artikel']);
             $table->enum('kategori_pengguna', ['Warga', 'Kader']);
             $table->string('tautan', 500)->nullable();
-            $table->timestamp('dibuat_pada')->useCurrent();
+            $table->string('thumbnail_url', 500)->nullable();
+            $table->string('durasi', 20)->nullable();
+            $table->string('kategori', 100)->nullable();
+            $table->integer('views')->default(0);
+            $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable();
         });
     }

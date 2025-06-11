@@ -6,6 +6,7 @@
     <title>@yield('title', 'DengueCare')</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         @keyframes fadeIn {
@@ -50,6 +51,25 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .active-nav {
+            position: relative;
+        }
+
+        .active-nav::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+            border-radius: 3px;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
         @yield('custom-css')
     </style>
     @yield('header-scripts')
@@ -57,18 +77,96 @@
 @stack('scripts')
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header/Navbar -->
-    <header>
+    <header x-data="{ mobileMenuOpen: false }">
         <nav class="bg-blue-600 text-white shadow-md">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                <a href="{{ route('warga.dashboard') }}">
-                    <img src="{{ asset('/images/Logoputihkecil.png') }}" alt="DengueCare Logo" class="h-10">
-                </a>
-                <ul class="flex space-x-6">
-                    <li><a href="{{ route('warga.dashboard') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.dashboard') ? 'text-blue-200 underline' : '' }}">Beranda</a></li>
-                    <li><a href="{{ route('warga.informasi.index') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.informasi.index') ? 'text-blue-200 underline' : '' }}">Informasi</a></li>
-                    <li><a href="{{ route('warga.forum.index') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.forum.index') ? 'text-blue-200 underline' : '' }}">Forum</a></li>
-                    <li><a href="{{ route('warga.profile') }}" class="font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.profile') ? 'text-blue-200 underline' : '' }}">Profile</a></li>
-                </ul>
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <a href="{{ route('warga.dashboard') }}" class="flex items-center">
+                            <img src="{{ asset('/images/Logoputihkecil.png') }}" alt="DengueCare Logo" class="h-10 mr-2">
+                        </a>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <div class="flex space-x-6">
+                            <a href="{{ route('warga.dashboard') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.dashboard') ? 'active-nav' : '' }}">
+                                <i class="fas fa-home mr-1"></i> Beranda
+                            </a>
+                            <a href="{{ route('warga.informasi') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.informasi') ? 'active-nav' : '' }}">
+                                <i class="fas fa-info-circle mr-1"></i> Informasi
+                            </a>
+                            <a href="{{ route('warga.forum') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition {{ request()->routeIs('warga.forum.index') ? 'active-nav' : '' }}">
+                                <i class="fas fa-comments mr-1"></i> Forum
+                            </a>
+                        </div>
+
+                        <!-- Profile Dropdown -->
+                        <div class="relative dropdown" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
+                                @php
+                                    $user = auth()->user();
+                                    $profilePicUrl = asset('images/default-profile.jpg'); // default
+                                    
+                                    if ($user && $user->profile_pict) {
+                                        // Gunakan logika yang sama seperti di profile view
+                                        if (file_exists(public_path('uploads')) && is_link(public_path('storage'))) {
+                                            // Jika storage link ada dan merupakan symlink
+                                            $profilePicUrl = Storage::url($user->profile_pict);
+                                        } else {
+                                            // Jika tidak ada symlink, gunakan asset dengan path langsung
+                                            $profilePicUrl = asset($user->profile_pict);
+                                        }
+                                    }
+                                @endphp
+                                
+                                <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-blue-200">
+                                    @if($user && $user->profile_pict)
+                                        <img src="{{ $profilePicUrl }}" 
+                                             alt="Foto Profil {{ $user->nama_lengkap }}" 
+                                             class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full bg-blue-200 flex items-center justify-center">
+                                            <i class="fas fa-user text-blue-700"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <span class="font-medium">{{ auth()->user()->nama_lengkap }}</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{'transform rotate-180': open}"></i>
+                            </button>
+
+                            <div x-show="open" 
+                                 @click.away="open = false" 
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dropdown-menu hidden"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95">
+                                <a href="{{ route('warga.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                    <i class="fas fa-user-circle mr-2"></i> Profil Saya
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                                </a>
+                                <form action="{{ route('warga.logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile menu button -->
+                    <div class="md:hidden flex items-center">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-white focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </nav>
     </header>
@@ -125,9 +223,10 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script>
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    </script>
 
     <script>
         // Base JS functionality

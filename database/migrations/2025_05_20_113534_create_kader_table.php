@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama_lengkap', 100);
             $table->string('telepon', 15)->unique();
             $table->string('password', 255);
+            $table->string('profil_pict')->nullable(); // Add this line
             $table->foreignId('rt_id')->constrained('rt')->onDelete('cascade');
             $table->timestamp('dibuat_pada')->useCurrent();
             $table->timestamp('updated_at')->nullable();

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('pesan')->nullable();
             $table->string('gambar', 500)->nullable();
             $table->timestamp('dibuat_pada')->useCurrent();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamp('diperbarui_pada')->nullable();
         });
     }
 
