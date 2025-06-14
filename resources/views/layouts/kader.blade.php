@@ -18,11 +18,11 @@
             from { transform: translateX(20px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        
         #file-preview-container {
             animation: fadeIn 0.3s ease-out;
         }
 
-        /* Efek hover untuk tombol hapus */
         #remove-file-btn:hover {
             transform: scale(1.1);
             transition: transform 0.2s ease;
@@ -55,7 +55,7 @@
         }
 
         .virus-primary {
-            background-color: #2563eb; /* blue-600 */
+            background-color: #2563eb;
         }
 
         .active-nav {
@@ -73,8 +73,71 @@
             border-radius: 3px;
         }
 
+        /* Profile Picture Styles - Updated */
+        .profile-picture-container {
+            position: relative;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid white;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #bfdbfe;
+        }
+
+        .profile-picture-container:hover {
+            border-color: #93c5fd;
+            transform: scale(1.05);
+        }
+
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+
+        .profile-fallback {
+            width: 100%;
+            height: 100%;
+            background-color: #bfdbfe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1d4ed8;
+            font-size: 0.875rem;
+        }
+
         .dropdown:hover .dropdown-menu {
             display: block;
+        }
+
+        /* Loading animation */
+        .profile-loading {
+            width: 100%;
+            height: 100%;
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .profile-loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
     @stack('styles')
@@ -87,7 +150,7 @@
                 <div class="flex justify-between items-center">
                     <div class="flex items-center">
                         <a href="{{ route('kader.dashboard') }}" class="flex items-center">
-                            <img src="{{ asset('/images/Logoputihkecil.png') }}" alt="DengueCare Logo" class="h-10 mr-2">
+                            <img src="{{ asset('images/Logoputihkecil.png') }}" alt="DengueCare Logo" class="h-10 mr-2">
                         </a>
                     </div>
 
@@ -100,7 +163,7 @@
                             <a href="{{ route('kader.forum') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition">
                                 <i class="fas fa-comments mr-1"></i> Forum
                             </a>
-                            <a href="{{ route('kader.buku-panduan') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition ">
+                            <a href="{{ route('kader.buku-panduan') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition">
                                 <i class="fas fa-book mr-1"></i> Panduan
                             </a>
                             <a href="{{ route('kader.video-pelatihan') }}" class="py-2 px-1 font-medium hover:text-blue-200 transition">
@@ -108,21 +171,42 @@
                             </a>
                         </div>
 
-                        <!-- Profile Dropdown -->
+                        <!-- Profile Dropdown - Simplified -->
+                        @php
+                            $kader = auth()->guard('kader')->user();
+                        @endphp
+
                         <div class="relative" x-data="{ open: false, stayOpen: false }">
                             <button 
                                 @click="open = !open; stayOpen = !stayOpen" 
                                 @mouseenter="if(!stayOpen) open = true" 
                                 @mouseleave="if(!stayOpen) open = false"
-                                class="flex items-center space-x-2 focus:outline-none transition-colors duration-200 rounded-full p-1 hover:bg-blue-50"
+                                class="flex items-center space-x-2 focus:outline-none transition-colors duration-200 rounded-full p-1 hover:bg-blue-700 hover:bg-opacity-30"
                             >
-                                <div class="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
-                                    <i class="fas fa-user text-blue-700"></i>
+                                <!-- Profile Picture - Small -->
+                                <div class="profile-picture-container w-8 h-8">
+                                    @if($kader && $kader->profile_picture_url)
+                                        <img 
+                                            src="{{ $kader->profile_picture_url }}" 
+                                            alt="Profile Picture"
+                                            class="profile-img"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                        >
+                                        <div class="profile-fallback" style="display: none;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    @else
+                                        <div class="profile-fallback">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    @endif
                                 </div>
-                                <span class="font-medium">{{ auth()->guard('kader')->user()->nama_lengkap }}</span>
+                                
+                                <span class="font-medium">{{ $kader->nama_lengkap ?? 'Kader' }}</span>
                                 <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{'transform rotate-180': open}"></i>
                             </button>
-
+                            
+                            <!-- Dropdown menu -->
                             <div 
                                 x-show="open" 
                                 x-transition:enter="transition ease-out duration-100"
@@ -137,8 +221,31 @@
                                 @click.away="open = false; stayOpen = false"
                             >
                                 <div class="px-4 py-3 border-b border-gray-100">
-                                    <p class="text-sm font-medium text-gray-800">{{ auth()->guard('kader')->user()->nama_lengkap }}</p>
-                                    <p class="text-xs text-gray-500 truncate">Kader Jumantik</p>
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Profile Picture - Large in dropdown -->
+                                        <div class="profile-picture-container w-10 h-10 border-gray-200">
+                                            @if($kader && $kader->profile_picture_url)
+                                                <img 
+                                                    src="{{ $kader->profile_picture_url }}" 
+                                                    alt="Profile Picture"
+                                                    class="profile-img"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                >
+                                                <div class="profile-fallback" style="display: none;">
+                                                    <i class="fas fa-user text-base"></i>
+                                                </div>
+                                            @else
+                                                <div class="profile-fallback">
+                                                    <i class="fas fa-user text-base"></i>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800">{{ $kader->nama_lengkap ?? 'Kader' }}</p>
+                                            <p class="text-xs text-gray-500">Kader Jumantik</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <a 
@@ -167,6 +274,66 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Mobile menu button -->
+                    <div class="md:hidden">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-white">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation -->
+                <div x-show="mobileMenuOpen" x-transition class="md:hidden mt-4 pb-4 border-t border-blue-500">
+                    <div class="flex flex-col space-y-2 mt-4">
+                        <!-- Profile section for mobile -->
+                        <div class="flex items-center space-x-3 py-2 px-4 bg-blue-700 rounded mb-2">
+                            <div class="profile-picture-container w-8 h-8">
+                                @if($kader && $kader->profile_picture_url)
+                                    <img 
+                                        src="{{ $kader->profile_picture_url }}" 
+                                        alt="Profile Picture"
+                                        class="profile-img"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                    >
+                                    <div class="profile-fallback" style="display: none;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                @else
+                                    <div class="profile-fallback">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="font-medium">{{ $kader->nama_lengkap ?? 'Kader' }}</span>
+                        </div>
+
+                        <a href="{{ route('kader.dashboard') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition {{ request()->routeIs('kader.dashboard') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-home mr-2"></i> Beranda
+                        </a>
+                        <a href="{{ route('kader.forum') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-comments mr-2"></i> Forum
+                        </a>
+                        <a href="{{ route('kader.buku-panduan') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-book mr-2"></i> Panduan
+                        </a>
+                        <a href="{{ route('kader.video-pelatihan') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-graduation-cap mr-2"></i> Pelatihan
+                        </a>
+                        <hr class="border-blue-500 my-2">
+                        <a href="{{ route('kader.profile') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-user-circle mr-2"></i> Profil Saya
+                        </a>
+                        <a href="{{ route('kader.settings') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-cog mr-2"></i> Edit Profile
+                        </a>
+                        <form method="POST" action="{{ route('kader.logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -211,6 +378,63 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Profile Image Preview Function
+        function previewProfileImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update semua profile image di halaman
+                    const profileImages = document.querySelectorAll('.profile-img');
+                    const fallbackContainers = document.querySelectorAll('.profile-fallback');
+                    
+                    profileImages.forEach(img => {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        img.onerror = function() {
+                            this.style.display = 'none';
+                            const fallback = this.nextElementSibling;
+                            if (fallback && fallback.classList.contains('profile-fallback')) {
+                                fallback.style.display = 'flex';
+                            }
+                        };
+                    });
+                    
+                    fallbackContainers.forEach(container => {
+                        container.style.display = 'none';
+                    });
+
+                    // Jika ada preview khusus (untuk form edit profile)
+                    const profilePreview = document.getElementById('profileImage');
+                    if (profilePreview) {
+                        profilePreview.src = e.target.result;
+                        profilePreview.style.display = 'block';
+                        
+                        const fallbackPreview = document.getElementById('fallbackContainer');
+                        if (fallbackPreview) {
+                            fallbackPreview.style.display = 'none';
+                        }
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Function to refresh profile images after upload
+        function refreshProfileImages(newImageUrl) {
+            const profileImages = document.querySelectorAll('.profile-img');
+            const fallbackContainers = document.querySelectorAll('.profile-fallback');
+            
+            profileImages.forEach(img => {
+                img.src = newImageUrl + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+                img.style.display = 'block';
+            });
+            
+            fallbackContainers.forEach(container => {
+                container.style.display = 'none';
+            });
+        }
+
     </script>
     @stack('scripts')
 </body>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Kader; // Pastikan model Kader sudah dibuat
+use App\Models\Kader;
 
 class KaderAuthController extends Controller
 {
@@ -18,23 +18,27 @@ class KaderAuthController extends Controller
         return view('auth.login_kader');
     }
 
-   // Di App\Http\Controllers\Auth\KaderAuthController
-public function login(Request $request)
-{
-    $credentials = $request->validate([
-        'nama_lengkap' => 'required|string',
-        'password' => 'required|string',
-    ]);
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'nama_lengkap' => 'required|string',
+            'password' => 'required|string',
+        ], [
+            'nama_lengkap.required' => 'Username wajib diisi',
+            'password.required' => 'Password wajib diisi',
+        ]);
 
-    if (Auth::guard('kader')->attempt($credentials)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/kader/dashboard');
+        if (Auth::guard('kader')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/kader/dashboard');
+        }
+
+        return back()
+            ->withErrors([
+                'nama_lengkap' => 'Username atau password salah',
+            ])
+            ->withInput($request->only('nama_lengkap'));
     }
-
-    return back()->withErrors([
-        'nama_lengkap' => 'Nama lengkap atau password salah!',
-    ])->onlyInput('nama_lengkap');
-}
 
     public function logout(Request $request)
     {

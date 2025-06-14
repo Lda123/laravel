@@ -3,114 +3,207 @@
 namespace App\Http\Controllers\Warga\profile;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Warga;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use Illuminate\Validation\Rules\Password;
 
 class EditProfileController extends Controller
 {
-    public function edit()
+    /**
+     * Menampilkan halaman edit profil warga
+     */
+    public function edit(): View
     {
-        $warga = auth('warga')->user();
+        /** @var Warga $warga */
+        $warga = Auth::guard('warga')->user();
+        
         return view('warga.edit-profile', compact('warga'));
     }
 
-    public function update(Request $request)
+    /**
+     * Memperbarui profil warga
+     */
+    public function update(Request $request): RedirectResponse
     {
-        $warga = Warga::find(auth('warga')->id());
+        /** @var Warga $warga */
+        $warga = Auth::guard('warga')->user();
 
-        if (!$warga) {
-            return redirect()->route('warga.profile')
-                ->with('error', 'Warga tidak ditemukan!');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'nama_lengkap' => 'required|string|max:255',
-            'telepon' => 'required|string|max:15|regex:/^[0-9]{10,15}$/',
-            'alamat_lengkap' => 'required|string',
-            'profile_pictures' => 'nullable|image|mimes:jpeg,jpg,jpg,gif|max:2048'
+        $validated = $request->validate([
+            'nama_lengkap' => [
+                'required',
+                'string',
+                'max:100',
+                'min:3',
+                'regex:/^[a-zA-Z\s\.\']+$/'
+            ],
+            'telepon' => [
+                'required',
+                'string',
+                'max:15',
+                'min:10',
+                'regex:/^[0-9+\-\s]+$/',
+                'unique:warga,telepon,'.$warga->id
+            ],
+            'alamat_lengkap' => 'required|string|max:255',
+            'current_password' => 'required_with:new_password',
+            'new_password' => [
+                'nullable',
+                'confirmed',
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+            ],
+            'profile_pict' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif',
+                'max:2048'
+            ]
         ], [
-            'telepon.regex' => 'Nomor telepon harus 10-15 digit angka',
-            'profile_pictures.max' => 'Ukuran file terlalu besar (maksimal 2MB)'
+            'nama_lengkap.required' => 'Nama lengkap wajib diisi.',
+            'nama_lengkap.min' => 'Nama lengkap minimal 3 karakter.',
+            'nama_lengkap.regex' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan apostrof.',
+            'telepon.required' => 'Nomor telepon wajib diisi.',
+            'telepon.min' => 'Nomor telepon minimal 10 digit.',
+            'telepon.regex' => 'Format nomor telepon tidak valid.',
+            'telepon.unique' => 'Nomor telepon sudah digunakan oleh warga lain.',
+            'alamat_lengkap.required' => 'Alamat lengkap wajib diisi.',
+            'new_password.min' => 'Password minimal 8 karakter.',
+            'new_password.letters' => 'Password harus mengandung huruf.',
+            'new_password.mixed_case' => 'Password harus mengandung huruf besar dan kecil.',
+            'new_password.numbers' => 'Password harus mengandung angka.',
+            'new_password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'current_password.required_with' => 'Password saat ini diperlukan untuk mengubah password.',
+            'profile_pict.image' => 'File harus berupa gambar.',
+            'profile_pict.mimes' => 'Format gambar harus JPEG, PNG, JPG, atau GIF.',
+            'profile_pict.max' => 'Ukuran gambar maksimal 2MB.'
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // Proses upload gambar
-        $profilePicPath = $warga->profile_pictures;
-
-        if ($request->hasFile('profile_pictures')) {
-            try {
-                // Metode 1: Menggunakan Storage (jika symbolic link sudah ada)
-                if (file_exists(public_path('storage')) && is_link(public_path('storage'))) {
-                    // Hapus gambar lama
-                    if ($warga->profile_pictures && 
-                        $warga->profile_pictures !== 'assets/img/default-profile.jpg' &&
-                        Storage::disk('public')->exists($warga->profile_pictures)) {
-                        Storage::disk('public')->delete($warga->profile_pictures);
-                    }
-
-                    // Simpan gambar baru
-                    $fileName = time() . '_' . $request->file('profile_pictures')->getClientOriginalName();
-                    $path = $request->file('profile_pictures')->storeAs('profile_pictures', $fileName, 'public');
-                    $profilePicPath = $path;
-                } 
-                // Metode 2: Menggunakan publicpath (alternatif jika symbolic link bermasalah)
-                else {
-                    $fileName = time() . '' . $request->file('profile_pictures')->getClientOriginalName();
-                    $uploadPath = public_path('storage/profile_pictures');
-
-                    // Buat folder jika belum ada
-                    if (!file_exists($uploadPath)) {
-                        mkdir($uploadPath, 0777, true);
-                    }
-
-                    // Hapus gambar lama
-                    if ($warga->profile_pictures && 
-                        $warga->profile_pictures !== 'images/default-profile.jpg' &&
-                        file_exists(public_path($warga->profile_pictures))) {
-                        unlink(public_path($warga->profile_pictures));
-                    }
-
-                    // Pindahkan file
-                    $request->file('profile_pictures')->move($uploadPath, $fileName);
-                    $profilePicPath = 'storage/profile_pictures/' . $fileName;
-                }
-
-            } catch (\Exception $e) {
-                return redirect()->back()
-                    ->with('error', 'Gagal mengupload gambar: ' . $e->getMessage())
-                    ->withInput();
-            }
+        // Verifikasi password saat ini jika ingin mengubah password
+        if ($request->filled('new_password') && !Hash::check($validated['current_password'], $warga->password)) {
+            return back()->withErrors(['current_password' => 'Password saat ini tidak valid']);
         }
 
         try {
-            // Update data
-            $warga->nama_lengkap = $request->nama_lengkap;
-            $warga->telepon = $request->telepon;
-            $warga->alamat_lengkap = $request->alamat_lengkap;
-            $warga->profile_pictures = $profilePicPath;
-
-            $result = $warga->save();
-
-            if ($result) {
-                return redirect()->route('warga.profile')
-                    ->with('success', 'Profil berhasil diperbarui!');
-            } else {
-                return redirect()->back()
-                    ->with('error', 'Gagal menyimpan perubahan profil!')
-                    ->withInput();
+            // Handle upload gambar profil
+            if ($request->hasFile('profile_pict')) {
+                // Hapus gambar lama jika ada
+                $this->deleteProfilePicture($warga);
+                
+                // Format nama file baru
+                $filename = 'warga_' . $warga->id . '_' . str_replace(' ', '_', strtolower($validated['nama_lengkap'])) . '.' . $request->file('profile_pict')->extension();
+                
+                // Simpan gambar baru dengan nama yang diformat
+                $path = $request->file('profile_pict')->storeAs(
+                    'profile_pictures/warga',
+                    $filename,
+                    'public'
+                );
+                $warga->profile_pict = $path;
             }
 
+            // Update data dasar
+            $warga->nama_lengkap = trim($validated['nama_lengkap']);
+            $warga->telepon = $this->formatPhoneNumber($validated['telepon']);
+            $warga->alamat_lengkap = $validated['alamat_lengkap'];
+
+            // Update password jika diisi
+            if (!empty($validated['new_password'])) {
+                $warga->password = Hash::make($validated['new_password']);
+            }
+
+            $warga->save();
+            
+            \Log::info('Warga profile updated', [
+                'warga_id' => $warga->id,
+                'updated_fields' => array_keys($validated)
+            ]);
+
+            return redirect()->route('warga.profile')
+                   ->with('success', 'Profil berhasil diperbarui! 🎉');
+                   
         } catch (\Exception $e) {
+            \Log::error('Failed to update warga profile', [
+                'warga_id' => $warga->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return redirect()->back()
-                ->with('error', 'Gagal memperbarui profil: ' . $e->getMessage())
-                ->withInput();
+                   ->with('error', 'Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.')
+                   ->withInput();
         }
+    }
+
+    /**
+     * Hapus foto profil warga
+     */
+    public function deletePhoto(): RedirectResponse
+    {
+        /** @var Warga $warga */
+        $warga = Auth::guard('warga')->user();
+        
+        try {
+            if ($warga->profile_pict) {
+                // Hapus file foto
+                $this->deleteProfilePicture($warga);
+                
+                // Update database
+                $warga->profile_pict = null;
+                $warga->save();
+                
+                return redirect()->route('warga.profile.edit')
+                       ->with('success', 'Foto profil berhasil dihapus.');
+            }
+            
+            return redirect()->back()
+                   ->with('info', 'Tidak ada foto profil untuk dihapus.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete profile photo', [
+                'warga_id' => $warga->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()
+                   ->with('error', 'Gagal menghapus foto profil.');
+        }
+    }
+
+    /**
+     * Helper method untuk menghapus foto profil
+     */
+    private function deleteProfilePicture(Warga $warga): void
+    {
+        if ($warga->profile_pict && Storage::disk('public')->exists($warga->profile_pict)) {
+            Storage::disk('public')->delete($warga->profile_pict);
+        }
+    }
+
+    /**
+     * Format nomor telepon ke format standar
+     */
+    private function formatPhoneNumber(string $phone): string
+    {
+        // Hapus karakter non-digit kecuali +
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+        
+        // Jika dimulai dengan 08, ganti dengan +62
+        if (str_starts_with($phone, '08')) {
+            $phone = '+62' . substr($phone, 1);
+        }
+        
+        // Jika dimulai dengan 8 (tanpa 0), tambahkan +62
+        if (str_starts_with($phone, '8') && !str_starts_with($phone, '+')) {
+            $phone = '+62' . $phone;
+        }
+        
+        return $phone;
     }
 }

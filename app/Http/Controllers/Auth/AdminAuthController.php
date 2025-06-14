@@ -1,51 +1,51 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Warga; // Pastikan model Warga sudah dibuat
+use App\Models\Admin;
 
-class WargaAuthController extends Controller
+class AdminAuthController extends Controller
 {
     /**
-     * Menampilkan form login warga
+     * Show the admin login form
      */
     public function showLoginForm()
     {
-        return view('auth.login_warga');
+        return view('auth.login_admin');
     }
 
     /**
-     * Proses login warga
+     * Handle an admin login request
      */
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'telepon' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // Coba melakukan autentikasi
-        if (Auth::guard('warga')->attempt($credentials)) {
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/warga/dashboard');
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         return back()->withErrors([
-            'telepon' => 'Nomor telepon atau password salah!',
-        ])
-        ->withInput($request->only('telepon'));
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
     }
 
     /**
-     * Proses logout warga
+     * Log the admin out of the application
      */
     public function logout(Request $request)
     {
-        Auth::guard('warga')->logout();
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/warga/login_warga');
+        return redirect('/admin/login');
     }
+
 }

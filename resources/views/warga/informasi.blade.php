@@ -4,130 +4,126 @@
 
 @section('content')
 @if(isset($detailItem) && $detailItem)
-    {{-- Detail View - Improved Article Section --}}
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover animate-fade-in">
-            <div class="p-6">
-                <div class="flex items-center mb-6">
-                    <div class="bg-blue-100 p-3 rounded-full mr-4">
-                        <i class="fas {{ $detailItem->tipe == 'Video' ? 'fa-video' : 'fa-newspaper' }} text-blue-600 text-xl"></i>
-                    </div>
-                    <div class="flex-grow">
-                        <h1 class="text-2xl font-bold text-gray-800">{{ $detailItem->judul }}</h1>
-                        <p class="text-gray-600">{{ $detailItem->tipe }} Edukasi DBD</p>
-                        <div class="flex items-center space-x-4 mt-2">
-                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                                {{ $detailItem->kategori }}
-                            </span>
-                            <span class="text-gray-500 text-sm flex items-center">
-                                <i class="fas fa-eye mr-1"></i> {{ $detailItem->views }}x dilihat
-                            </span>
-                            <span class="text-gray-500 text-sm flex items-center">
-                                <i class="fas fa-calendar mr-1"></i> {{ $detailItem->created_at->format('d M Y') }}
-                            </span>
+    {{-- Hanya menangani artikel saja --}}
+    @if($detailItem->tipe == 'Artikel')
+        {{-- Detail View - Improved Article Section --}}
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover animate-fade-in">
+                <div class="p-6">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-blue-100 p-3 rounded-full mr-4">
+                            <i class="fas fa-newspaper text-blue-600 text-xl"></i>
                         </div>
-                    </div>
-                    @auth('warga')
-                    <button class="save-btn p-3 rounded-full {{ in_array($detailItem->id, $savedItems) ? 'text-blue-600 bg-blue-100' : 'text-gray-400 hover:bg-gray-100' }}"
-                            data-edukasi-id="{{ $detailItem->id }}"
-                            data-action="{{ in_array($detailItem->id, $savedItems) ? 'unsave' : 'save' }}">
-                        <i class="fas fa-bookmark text-lg"></i>
-                    </button>
-                    @endauth
-                </div>
-
-                <div class="space-y-6">
-                    @if($detailItem->tipe == 'Video')
-                        {{-- Video content remains the same --}}
-                    @else
-                        {{-- Improved Article Content --}}
-                        <div class="article-detail">
-                            {{-- Article Source Link (improved) --}}
-                            @if($detailItem->tautan)
-                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0 pt-1">
-                                        <i class="fas fa-external-link-alt text-blue-400"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm text-blue-700">
-                                            <strong>Sumber Artikel:</strong>
-                                            <a href="{{ $detailItem->tautan }}" 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            class="text-blue-600 hover:text-blue-800 underline ml-2 font-medium break-all">
-                                                {{ Str::limit($detailItem->tautan, 50) }}
-                                                <i class="fas fa-external-link-alt ml-1 text-xs"></i>
-                                            </a>
-                                        </p>
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            Link akan terbuka di tab baru
-                                        </p>
-                                    </div>
-                                </div>
+                        <div class="flex-grow">
+                            <h1 class="text-2xl font-bold text-gray-800">{{ $detailItem->judul }}</h1>
+                            <p class="text-gray-600">Artikel Edukasi DBD</p>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $detailItem->kategori }}
+                                </span>
+                                <span class="text-gray-500 text-sm flex items-center">
+                                    <i class="fas fa-eye mr-1"></i> {{ $detailItem->views }}x dilihat
+                                </span>
+                                <span class="text-gray-500 text-sm flex items-center">
+                                    <i class="fas fa-calendar mr-1"></i> {{ $detailItem->created_at->format('d M Y') }}
+                                </span>
                             </div>
-                            @endif
-
-                            {{-- Article Content with improved link handling --}}
-                            <div class="article-content bg-white border rounded-lg p-8 shadow-sm">
-                                <div class="prose prose-lg max-w-none">
-                                    @php
-                                        // Process content to make links clickable and open in new tab
-                                        $processedContent = preg_replace_callback(
-                                            '/<a\s[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)<\/a>/i',
-                                            function($matches) {
-                                                $url = $matches[1];
-                                                $text = $matches[2];
-                                                // Only modify if it's an external link
-                                                if (filter_var($url, FILTER_VALIDATE_URL) && 
-                                                    !str_contains($url, request()->getHttpHost())) {
-                                                    return '<a href="'.e($url).'" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">'.e($text).' <i class="fas fa-external-link-alt text-xs ml-1"></i></a>';
-                                                }
-                                                return $matches[0];
-                                            },
-                                            $detailItem->isi
-                                        );
-                                    @endphp
-                                    {!! $processedContent !!}
-                                </div>
-                            </div>
-
-                            {{-- Improved Related Links Section --}}
-                            @if($detailItem->tautan)
-                            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                                <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
-                                    <i class="fas fa-link mr-2 text-gray-600"></i>
-                                    Tautan Terkait:
-                                </h4>
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                                    <a href="{{ $detailItem->tautan }}" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                        <i class="fas fa-external-link-alt mr-2"></i>
-                                        Kunjungi Sumber Asli
-                                    </a>
-                                    <span class="text-xs text-gray-500 sm:ml-2">
-                                        <i class="fas fa-info-circle mr-1"></i> Link akan terbuka di tab baru
-                                    </span>
-                                </div>
-                            </div>
-                            @endif
                         </div>
-                    @endif
+                        @auth('warga')
+                        <button class="save-btn p-3 rounded-full {{ in_array($detailItem->id, $savedItems) ? 'text-blue-600 bg-blue-100' : 'text-gray-400 hover:bg-gray-100' }}"
+                                data-edukasi-id="{{ $detailItem->id }}"
+                                data-action="{{ in_array($detailItem->id, $savedItems) ? 'unsave' : 'save' }}">
+                            <i class="fas fa-bookmark text-lg"></i>
+                        </button>
+                        @endauth
+                    </div>
 
-                    {{-- Action Buttons --}}
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 pt-6 border-t">
-                        <a href="{{ route('warga.informasi') }}" 
-                        class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Kembali ke Daftar Edukasi
-                        </a>
+                    <div class="space-y-6">
+                        {{-- Article Source Link (improved) --}}
+                        @if($detailItem->tautan)
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 pt-1">
+                                    <i class="fas fa-external-link-alt text-blue-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-blue-700">
+                                        <strong>Sumber Artikel:</strong>
+                                        <a href="{{ $detailItem->tautan }}" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        class="text-blue-600 hover:text-blue-800 underline ml-2 font-medium break-all">
+                                            {{ Str::limit($detailItem->tautan, 50) }}
+                                            <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                                        </a>
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Link akan terbuka di tab baru
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Article Content with improved link handling --}}
+                        <div class="article-content bg-white border rounded-lg p-8 shadow-sm">
+                            <div class="prose prose-lg max-w-none">
+                                @php
+                                    // Process content to make links clickable and open in new tab
+                                    $processedContent = preg_replace_callback(
+                                        '/<a\s[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)<\/a>/i',
+                                        function($matches) {
+                                            $url = $matches[1];
+                                            $text = $matches[2];
+                                            // Only modify if it's an external link
+                                            if (filter_var($url, FILTER_VALIDATE_URL) && 
+                                                !str_contains($url, request()->getHttpHost())) {
+                                                return '<a href="'.e($url).'" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">'.e($text).' <i class="fas fa-external-link-alt text-xs ml-1"></i></a>';
+                                            }
+                                            return $matches[0];
+                                        },
+                                        $detailItem->isi
+                                    );
+                                @endphp
+                                {!! $processedContent !!}
+                            </div>
+                        </div>
+
+                        {{-- Improved Related Links Section --}}
+                        @if($detailItem->tautan)
+                        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-link mr-2 text-gray-600"></i>
+                                Tautan Terkait:
+                            </h4>
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                                <a href="{{ $detailItem->tautan }}" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                    <i class="fas fa-external-link-alt mr-2"></i>
+                                    Kunjungi Sumber Asli
+                                </a>
+                                <span class="text-xs text-gray-500 sm:ml-2">
+                                    <i class="fas fa-info-circle mr-1"></i> Link akan terbuka di tab baru
+                                </span>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 pt-6 border-t">
+                            <a href="{{ route('warga.informasi') }}" 
+                            class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Kembali ke Daftar Edukasi
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 @else
     {{-- List View --}}
     <div class="container mx-auto px-4 py-8">

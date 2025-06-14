@@ -50,6 +50,10 @@ return [
             'driver' => 'session',
             'provider' => 'wargas',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
     ],
 
     /*
@@ -83,6 +87,10 @@ return [
         'wargas' => [
         'driver' => 'eloquent',
         'model' => App\Models\Warga::class,
+        ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
         ],
     ],
 

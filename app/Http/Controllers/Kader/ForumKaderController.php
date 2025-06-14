@@ -14,15 +14,15 @@ class ForumKaderController extends Controller
     {
         $search = $request->query('search', '');
 
-        $posts = ForumPost::with(['kader', 'comments.kader'])
+        $posts = ForumPost::with(['kader', 'warga', 'comments.kader', 'comments.warga'])
             ->whereNull('parent_id')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('topik', 'like', "%{$search}%")
-                      ->orWhere('pesan', 'like', "%{$search}%");
+                    ->orWhere('pesan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('dibuat_pada', 'desc') // Changed from created_at to dibuat_pada
+            ->orderBy('dibuat_pada', 'desc')
             ->paginate(10);
 
         return view('kader.forum', compact('posts', 'search'));
@@ -54,7 +54,7 @@ class ForumKaderController extends Controller
     public function storeComment(Request $request)
     {
         $request->validate([
-            'parent_id' => 'required|exists:forum_post,id', // Fixed table name
+            'parent_id' => 'required|exists:forum_post,id',
             'pesan' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);

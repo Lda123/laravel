@@ -59,16 +59,16 @@
                         @enderror
                     </div>
 
-                    <!-- Current Password with Toggle Visibility -->
+                    <!-- Current Password -->
                     <div>
                         <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Password Saat Ini (untuk verifikasi)</label>
                         <div class="relative">
                             <input type="password" name="current_password" id="current_password" 
-                                   value="{{ old('current_password') }}"
-                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10">
-                            <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 hover:text-gray-800 focus:outline-none" 
-                                    onclick="togglePasswordVisibility('current_password', 'current_password_icon')">
-                                <i id="current_password_icon" class="fas fa-eye"></i>
+                                value="{{ old('current_password') }}"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-12">
+                            <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                                    onclick="togglePasswordVisibility('current_password')">
+                                <i class="fas fa-eye" id="current_password_icon"></i>
                             </button>
                         </div>
                         @error('current_password')
@@ -79,8 +79,14 @@
                     <!-- New Password -->
                     <div>
                         <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">Password Baru (kosongkan jika tidak ingin mengubah)</label>
-                        <input type="password" name="new_password" id="new_password" 
-                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <div class="relative">
+                            <input type="password" name="new_password" id="new_password" 
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10">
+                                   <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                                    onclick="togglePasswordVisibility('new_password')">
+                                <i class="fas fa-eye" id="new_password_icon"></i>
+                            </button>
+                        </div>
                         @error('new_password')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -89,8 +95,17 @@
                     <!-- Confirm New Password -->
                     <div>
                         <label for="new_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
-                        <input type="password" name="new_password_confirmation" id="new_password_confirmation" 
-                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <div class="relative">
+                            <input type="password" name="new_password_confirmation" id="new_password_confirmation" 
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10">
+                                   <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                                    onclick="togglePasswordVisibility('new_password_confirmation')">
+                                <i class="fas fa-eye" id="new_password_confirmation_icon"></i>
+                            </button>
+                        </div>
+                        @error('new_password_confirmation')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -124,9 +139,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function togglePasswordVisibility(inputId, iconId) {
+function togglePasswordVisibility(inputId) {
     const input = document.getElementById(inputId);
-    const icon = document.getElementById(iconId);
+    const icon = document.getElementById(inputId + '_icon');
+    
+    if (!input || !icon) return;
     
     if (input.type === 'password') {
         input.type = 'text';

@@ -69,12 +69,12 @@
                     <div class="p-6">
                         <div class="flex items-start space-x-4">
                             <div class="w-12 h-12 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 font-semibold">
-                                {{ substr($post->warga->nama_lengkap ?? 'User', 0, 2) }}
+                                {{ $post->author_initials }}
                             </div>
                             <div class="flex-grow">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h3 class="font-bold text-gray-800">{{ $post->warga->nama_lengkap ?? 'Anonymous' }}</h3>
+                                        <h3 class="font-bold text-gray-800">{{ $post->author_name }}</h3>
                                         <span class="text-gray-500 text-sm">
                                             {{ $post->dibuat_pada ? $post->dibuat_pada->translatedFormat('d M Y H:i') : 'Tanggal tidak tersedia' }}
                                         </span>
@@ -146,11 +146,11 @@
                             <div class="bg-white p-3 rounded-lg border-l-4 border-blue-600">
                                 <div class="flex items-start space-x-3">
                                     <div class="w-9 h-9 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 text-sm font-semibold">
-                                        {{ substr($comment->warga->nama_lengkap ?? 'User', 0, 2) }}
+                                        {{ $comment->author_initials }}
                                     </div>
                                     <div class="flex-grow">
                                         <div class="flex items-center justify-between">
-                                            <span class="font-semibold text-gray-800">{{ $comment->warga->nama_lengkap ?? 'Anonymous' }}</span>
+                                            <span class="font-semibold text-gray-800">{{ $comment->author_name }}</span>
                                             <span class="text-gray-500 text-xs">
                                                 {{ $comment->dibuat_pada ? $comment->dibuat_pada->translatedFormat('d M Y H:i') : 'Tanggal tidak tersedia' }}
                                             </span>
@@ -207,7 +207,6 @@
             <i class="fas fa-times"></i>
         </button>
         <img id="modalImage" src="" alt="Gambar besar" class="max-w-full max-h-[90vh] mx-auto rounded-lg shadow-xl">
-    </div>
 </div>
 @endsection
 

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(EdukasiSeeder::class);
         $this->call(ForumPostSeeder::class);
         $this->call(BukuPanduanSeeder::class);
+        $this->call(AdminSeeder::class);
 
     }
 }                                                                                              

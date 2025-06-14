@@ -66,6 +66,15 @@ class InformasiController extends Controller
                 ->toArray();
         }
 
+        // Jika tipe adalah Video, render view khusus video
+        if ($detailItem->tipe === 'Video') {
+            return view('warga.video_edukasi_detail', [
+                'video' => $detailItem,
+                'isSaved' => in_array($detailItem->id, $savedItems)
+            ]);
+        }
+
+        // Default untuk artikel/tipe lainnya
         return view('warga.informasi', [
             'detailItem' => $detailItem,
             'savedItems' => $savedItems

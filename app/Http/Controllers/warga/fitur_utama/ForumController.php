@@ -13,12 +13,12 @@ class ForumController extends Controller
     {
         $search = $request->query('search', '');
 
-        $posts = ForumPost::with(['warga', 'comments.warga'])
+        $posts = ForumPost::with(['kader', 'warga', 'comments.kader', 'comments.warga'])
             ->whereNull('parent_id')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('topik', 'like', "%{$search}%")
-                      ->orWhere('pesan', 'like', "%{$search}%");
+                    ->orWhere('pesan', 'like', "%{$search}%");
                 });
             })
             ->orderBy('dibuat_pada', 'desc')

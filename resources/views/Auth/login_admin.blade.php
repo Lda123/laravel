@@ -1,27 +1,24 @@
 @extends('layouts.auth')
 
-@section('title', 'Login Kader')
+@section('title', 'Login Admin')
 @section('content')
-    <!-- kolom Kiri (gambar dan sambutan) -->
+    <!-- Kolom Kiri (gambar dan sambutan) -->
     <div class="w-1/2 bg-cover bg-center flex flex-col justify-center items-center text-center relative" 
          style="background-image: url('/images/bgawal.png'); background-color: #f5f5f5;">
         <img src="/images/Logobesar.png" alt="DengueCare Logo" 
              class="w-[70%] max-w-[300px] mb-[200px] animate-slide-left">
         <h1 class="text-2xl text-white mb-5 animate-fade-in">
-            Selamat Datang Warga Surabaya! <br> 
-            <span class="font-bold text-white">Bersama Lawan DBD</span>
+            Selamat Datang Admin! <br> 
+            <span class="font-bold text-white">Sistem Manajemen DengueCare</span>
         </h1>
-        <p class="text-base text-white animate-fade-in">Platform inovatif untuk meningkatkan kesadaran dan informasi mengenai DBD</p>
-        <a href="#" class="mt-4 text-white font-bold no-underline animate-fade-in hover:underline">
-            Pelajari lebih lanjut
-        </a>
+        <p class="text-base text-white animate-fade-in">Platform manajemen untuk administrasi sistem DengueCare</p>
     </div>
 
-    <!-- kolom Kanan (form login) -->
+    <!-- Kolom Kanan (form login) -->
     <div class="w-1/2 bg-white flex flex-col justify-center items-center text-center p-12">
         <img src="/images/Logokecil.png" alt="DengueCare Logo" 
              class="w-[200px] mb-[60px] animate-slide-right">
-        <h2 class="text-xl text-[#1D3557] mb-8 animate-fade-in">Masuk ke Halaman Utama</h2>
+        <h2 class="text-xl text-[#1D3557] mb-8 animate-fade-in">Login Admin</h2>
         
         @if($errors->any())
             <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg animate-fade-in w-[80%] max-w-[400px] relative">
@@ -38,19 +35,19 @@
             </div>
         @endif
         
-        <form action="{{ route('kader.login.submit') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
+        <form action="{{ route('admin.login.submit') }}" method="POST" class="w-[80%] max-w-[400px] animate-fade-in">
             @csrf
             <div class="mb-4">
                 <div class="relative">
-                    <input type="text" name="nama_lengkap" placeholder="Masukkan Username" required
-                    class="input-focus-effect w-full py-3 px-4 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none"
-                    value="{{ old('nama_lengkap') }}">
+                    <input type="text" name="username" placeholder="Username" required
+                           class="input-focus-effect w-full py-3 px-4 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none"
+                           value="{{ old('username') }}">
                 </div>
             </div>
                    
             <div class="mb-6">
                 <div class="relative">
-                    <input type="password" name="password" id="password" placeholder="Masukkan Kata Sandi" required
+                    <input type="password" name="password" id="password" placeholder="Password" required
                            class="input-focus-effect w-full py-3 px-4 text-base border-2 border-gray-300 rounded-lg transition-all duration-300 focus:outline-none pr-10">
                     <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                             onclick="togglePasswordVisibility()">
@@ -63,18 +60,13 @@
                             <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
                         </svg>
                     </button>
-                    @error('password')
-                        <span class="text-red-500 text-sm absolute -bottom-5 left-0">{{ $message }}</span>
-                    @enderror
                 </div>
             </div>
                    
             <button type="submit" class="btn-hover-effect w-full py-3 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer transition-all duration-300 hover:bg-[#1a56b5]">
-                Masuk
+                Login
             </button>
         </form>
-
-        <p class="text-base text-[#858585] mt-4 animate-fade-in">Lupa Kata Sandi? Hubungi Pihak Terkait</p>
     </div>
 
     <script>

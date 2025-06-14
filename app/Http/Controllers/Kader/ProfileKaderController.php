@@ -241,21 +241,4 @@ class ProfileKaderController extends Controller
         return redirect()->route('kader.profile')->with('success', 'Password berhasil diubah');
     }
 
-    private function getProfilePictureUrl(Kader $kader): ?string
-    {
-        if ($kader->foto_profil) {
-            // Cek di storage public
-            $publicPath = 'profile_pictures/' . basename($kader->foto_profil);
-            if (Storage::disk('public')->exists($publicPath)) {
-                return Storage::disk('public')->url($publicPath);
-            }
-            
-            // Cek path langsung jika tidak ada di profile_pictures
-            if (Storage::disk('public')->exists($kader->foto_profil)) {
-                return Storage::disk('public')->url($kader->foto_profil);
-            }
-        }
-        
-        return null;
-    }
 }

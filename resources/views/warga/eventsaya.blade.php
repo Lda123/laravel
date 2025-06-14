@@ -4,8 +4,16 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8" x-data="eventHandler()">
-    <!-- Confirmation Modal -->
-    <div x-show="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" x-transition>
+    <!-- Confirmation Modal - Tambahkan x-cloak dan style display:none -->
+    <div x-cloak x-show="showModal" 
+         style="display: none;"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.away="showModal = false">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">Konfirmasi Pembatalan</h3>
             <p class="text-gray-600 mb-6">Apakah Anda yakin ingin membatalkan pendaftaran event ini?</p>
@@ -106,16 +114,23 @@
     </div>
 </div>
 
+@push('styles')
+<style>
+    /* Tambahkan style untuk x-cloak */
+    [x-cloak] { display: none !important; }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('eventHandler', () => ({
-        showModal: false,
+        showModal: false, // Pastikan diinisialisasi sebagai false
         selectedEventId: null,
         
         showConfirmation(eventId) {
             this.selectedEventId = eventId;
-            this.showModal = true;
+            this.showModal = true; // Hanya di-set true saat tombol diklik
         },
         
         async cancelEvent() {

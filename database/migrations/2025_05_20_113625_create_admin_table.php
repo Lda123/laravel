@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('username', 50)->unique();
             $table->string('password');
             $table->string('nama_lengkap', 100);
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps(); // Ini akan membuat created_at dan updated_at
         });
     }
 

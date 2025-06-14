@@ -22,18 +22,32 @@
             class="w-[200px] mb-[60px] animate-slide-right">
         <h2 class="text-xl text-[#1D3557] mb-8 animate-fade-in">Masuk sebagai</h2>
         
-        <div class="w-[80%] max-w-[400px]">
-            <a href="{{ route('warga.login') }}" class="btn-hover-effect w-full py-3 px-4 my-3 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer animate-fade-in block">
+        <div class="w-[80%] max-w-[400px] space-y-4">
+            <!-- Button Warga -->
+            <a href="{{ route('warga.login') }}" class="btn-hover-effect w-full py-3 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer animate-fade-in flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
                 Warga
             </a>
-        </div>
-        
-        <p class="text-base text-[#858585] animate-fade-in">atau</p>
-        
-        <div class="w-[80%] max-w-[400px]">
-            <a href="{{ route('kader.login') }}" class="btn-hover-effect w-full py-3 px-4 my-3 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer animate-fade-in block">
+            
+            <!-- Button Kader -->
+            <a href="{{ route('kader.login') }}" class="btn-hover-effect w-full py-3 px-4 text-base bg-[#226BD2] text-white border-none rounded-lg cursor-pointer animate-fade-in flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+                </svg>
                 Kader Kesehatan
             </a>
+            
+            <!-- Button Admin (ditambahkan) -->
+            <a href="{{ route('admin.login') }}" class="btn-hover-effect w-full py-3 px-4 text-base bg-[#1D3557] text-white border-none rounded-lg cursor-pointer animate-fade-in flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                </svg>
+                Administrator
+            </a>
         </div>
+        
+        <p class="text-base text-[#858585] mt-4 animate-fade-in">Pilih peran Anda untuk melanjutkan</p>
     </div>
 @endsection

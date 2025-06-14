@@ -101,20 +101,21 @@
                             </a>
                         </div>
 
-                        <!-- Profile Dropdown -->
-                        <div class="relative dropdown" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
+                        <!-- Profile Dropdown - Improved Version -->
+                        <div class="relative" x-data="{ open: false, stayOpen: false }">
+                            <button 
+                                @click="open = !open; stayOpen = false" 
+                                @mouseenter="open = true"
+                                class="flex items-center space-x-2 focus:outline-none"
+                            >
                                 @php
                                     $user = auth()->user();
-                                    $profilePicUrl = asset('images/default-profile.jpg'); // default
+                                    $profilePicUrl = asset('images/default-profile.jpg');
                                     
                                     if ($user && $user->profile_pict) {
-                                        // Gunakan logika yang sama seperti di profile view
                                         if (file_exists(public_path('uploads')) && is_link(public_path('storage'))) {
-                                            // Jika storage link ada dan merupakan symlink
                                             $profilePicUrl = Storage::url($user->profile_pict);
                                         } else {
-                                            // Jika tidak ada symlink, gunakan asset dengan path langsung
                                             $profilePicUrl = asset($user->profile_pict);
                                         }
                                     }
@@ -123,8 +124,12 @@
                                 <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-blue-200">
                                     @if($user && $user->profile_pict)
                                         <img src="{{ $profilePicUrl }}" 
-                                             alt="Foto Profil {{ $user->nama_lengkap }}" 
-                                             class="w-full h-full object-cover">
+                                            alt="Foto Profil {{ $user->nama_lengkap }}" 
+                                            class="w-full h-full object-cover"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="w-full h-full bg-blue-200 flex items-center justify-center" style="display: none;">
+                                            <i class="fas fa-user text-blue-700"></i>
+                                        </div>
                                     @else
                                         <div class="w-full h-full bg-blue-200 flex items-center justify-center">
                                             <i class="fas fa-user text-blue-700"></i>
@@ -135,25 +140,66 @@
                                 <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{'transform rotate-180': open}"></i>
                             </button>
 
-                            <div x-show="open" 
-                                 @click.away="open = false" 
-                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dropdown-menu hidden"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="transform opacity-0 scale-95"
-                                 x-transition:enter-end="transform opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-75"
-                                 x-transition:leave-start="transform opacity-100 scale-100"
-                                 x-transition:leave-end="transform opacity-0 scale-95">
-                                <a href="{{ route('warga.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    <i class="fas fa-user-circle mr-2"></i> Profil Saya
+                            <!-- Dropdown menu - Improved -->
+                            <div 
+                                x-show="open" 
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 border border-gray-100"
+                                @mouseenter="open = true; stayOpen = true"
+                                @mouseleave="open = false; stayOpen = false"
+                                @click.away="open = false; stayOpen = false"
+                            >
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-200">
+                                            @if($user && $user->profile_pict)
+                                                <img src="{{ $profilePicUrl }}" 
+                                                    alt="Foto Profil {{ $user->nama_lengkap }}" 
+                                                    class="w-full h-full object-cover"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="w-full h-full bg-blue-200 flex items-center justify-center" style="display: none;">
+                                                    <i class="fas fa-user text-blue-700"></i>
+                                                </div>
+                                            @else
+                                                <div class="w-full h-full bg-blue-200 flex items-center justify-center">
+                                                    <i class="fas fa-user text-blue-700"></i>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800">{{ $user->nama_lengkap }}</p>
+                                            <p class="text-xs text-gray-500">Warga</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <a 
+                                    href="{{ route('warga.profile') }}" 
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center"
+                                >
+                                    <i class="fas fa-user-circle mr-3 text-blue-500 w-5 text-center"></i>
+                                    <span>Profil Saya</span>
                                 </a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                                <a 
+                                    href="#" 
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center"
+                                >
+                                    <i class="fas fa-cog mr-3 text-blue-500 w-5 text-center"></i>
+                                    <span>Pengaturan</span>
                                 </a>
-                                <form action="{{ route('warga.logout') }}" method="POST">
+                                <form method="POST" action="{{ route('warga.logout') }}">
                                     @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                    <button 
+                                        type="submit" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center border-t border-gray-100"
+                                    >
+                                        <i class="fas fa-sign-out-alt mr-3 text-red-500 w-5 text-center"></i>
+                                        <span>Keluar</span>
                                     </button>
                                 </form>
                             </div>
@@ -165,6 +211,54 @@
                         <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-white focus:outline-none">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation -->
+                <div x-show="mobileMenuOpen" x-transition class="md:hidden mt-4 pb-4 border-t border-blue-500">
+                    <div class="flex flex-col space-y-2 mt-4">
+                        <!-- Profile section for mobile -->
+                        <div class="flex items-center space-x-3 py-2 px-4 bg-blue-700 rounded mb-2">
+                            <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-blue-200">
+                                @if($user && $user->profile_pict)
+                                    <img src="{{ $profilePicUrl }}" 
+                                        alt="Foto Profil {{ $user->nama_lengkap }}" 
+                                        class="w-full h-full object-cover"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-full h-full bg-blue-200 flex items-center justify-center" style="display: none;">
+                                        <i class="fas fa-user text-blue-700"></i>
+                                    </div>
+                                @else
+                                    <div class="w-full h-full bg-blue-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-700"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="font-medium">{{ $user->nama_lengkap }}</span>
+                        </div>
+
+                        <a href="{{ route('warga.dashboard') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition {{ request()->routeIs('warga.dashboard') ? 'bg-blue-700' : '' }}">
+                            <i class="fas fa-home mr-2"></i> Beranda
+                        </a>
+                        <a href="{{ route('warga.informasi') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-info-circle mr-2"></i> Informasi
+                        </a>
+                        <a href="{{ route('warga.forum') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-comments mr-2"></i> Forum
+                        </a>
+                        <hr class="border-blue-500 my-2">
+                        <a href="{{ route('warga.profile') }}" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-user-circle mr-2"></i> Profil Saya
+                        </a>
+                        <a href="#" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-cog mr-2"></i> Pengaturan
+                        </a>
+                        <form method="POST" action="{{ route('warga.logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

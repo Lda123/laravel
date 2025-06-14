@@ -46,4 +46,6 @@ class Rt extends Model
     {
         return $this->hasMany(Laporan::class);
     }
+
+    
 }

@@ -11,7 +11,6 @@ class ForumPost extends Model
 
     protected $table = 'forum_post';
     
-    // Override Laravel's default timestamp column names
     const CREATED_AT = 'dibuat_pada';
     const UPDATED_AT = 'diperbarui_pada';
     
@@ -29,10 +28,12 @@ class ForumPost extends Model
         'diperbarui_pada' => 'datetime',
     ];
 
-    // Relationships
-    public function warga()
+    public function author()
     {
-        return $this->belongsTo(Warga::class);
+        if ($this->kader_id) {
+            return $this->belongsTo(Kader::class, 'kader_id');
+        }
+        return $this->belongsTo(Warga::class, 'warga_id');
     }
 
     public function kader()
@@ -40,18 +41,38 @@ class ForumPost extends Model
         return $this->belongsTo(Kader::class);
     }
 
+    public function warga()
+    {
+        return $this->belongsTo(Warga::class);
+    }
+
     public function parent()
     {
         return $this->belongsTo(ForumPost::class, 'parent_id');
     }
 
-    public function replies()
-    {
-        return $this->hasMany(ForumPost::class, 'parent_id');
-    }
-
     public function comments()
     {
-        return $this->hasMany(ForumPost::class, 'parent_id');
+        return $this->hasMany(ForumPost::class, 'parent_id')->with(['kader', 'warga']);
+    }
+
+    public function getAuthorNameAttribute()
+    {
+        if ($this->kader) {
+            return $this->kader->nama_lengkap;
+        }
+        if ($this->warga) {
+            return $this->warga->nama_lengkap;
+        }
+        return 'Anonymous';
+    }
+
+    public function getAuthorInitialsAttribute()
+    {
+        $name = $this->author_name;
+        if ($name !== 'Anonymous') {
+            return substr($name, 0, 2);
+        }
+        return 'AN';
     }
 }

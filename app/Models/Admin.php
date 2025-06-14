@@ -11,14 +11,23 @@ class Admin extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'admin';
-    protected $fillable = ['username', 'password', 'nama_lengkap'];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
+    
+    protected $fillable = [
+        'username',
+        'nama_lengkap',
         'password',
     ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'dibuat_pada' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 }

@@ -7,8 +7,8 @@
     <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover animate-fade-in">
         <div class="p-6">
             <div class="flex items-center mb-6">
-                <div class="bg-green-100 p-3 rounded-full mr-4">
-                    <i class="fas fa-video text-green-600 text-xl"></i>
+                <div class="bg-blue-100 p-3 rounded-full mr-4">
+                    <i class="fas fa-video text-blue-600 text-xl"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">{{ $video->judul }}</h1>
@@ -40,21 +40,13 @@
 
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-4">
-                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                             {{ $video->kategori }}
                         </span>
                         <span class="text-gray-500 text-sm flex items-center">
                             <i class="fas fa-eye mr-1"></i> {{ $video->views }}x ditonton
                         </span>
                     </div>
-                    
-                    @auth
-                    <button class="save-btn p-2 rounded-full {{ $isSaved ? 'text-green-600 bg-green-100' : 'text-gray-400 hover:bg-gray-100' }}"
-                            data-video-id="{{ $video->id }}"
-                            data-action="{{ $isSaved ? 'unsave' : 'save' }}">
-                        <i class="fas fa-bookmark"></i>
-                    </button>
-                    @endauth
                 </div>
 
                 <div class="prose max-w-none">
@@ -63,7 +55,7 @@
                 </div>
 
                 <div class="pt-4">
-                    <a href="{{ route('warga.video-edukasi') }}" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition btn-hover flex items-center w-max">
+                    <a href="{{ route('warga.informasi') }}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition btn-hover flex items-center w-max">
                         <i class="fas fa-arrow-left mr-2"></i>
                         Kembali ke Daftar Video
                     </a>
@@ -114,71 +106,6 @@
             }
         });
     });
-
-    // Save/Unsave video functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const saveBtn = document.querySelector('.save-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', function() {
-                const videoId = this.dataset.videoId;
-                const action = this.dataset.action;
-                const btn = this;
-                
-                fetch('{{ route("warga.video-edukasi.save") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        video_id: videoId,
-                        action: action
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Update button state
-                        btn.dataset.action = data.action;
-                        
-                        if (data.action === 'unsave') {
-                            btn.classList.remove('text-gray-400', 'hover:bg-gray-100');
-                            btn.classList.add('text-green-600', 'bg-green-100');
-                        } else {
-                            btn.classList.remove('text-green-600', 'bg-green-100');
-                            btn.classList.add('text-gray-400', 'hover:bg-gray-100');
-                        }
-                        
-                        // Show toast notification
-                        showToast(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Terjadi kesalahan saat menyimpan video', 'error');
-                });
-            });
-        }
-    });
-
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${
-            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
 </script>
 @endpush
 @endsection

@@ -69,13 +69,13 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 card-hover animate-fade-in" data-animation-delay="{{ $loop->index * 0.1 }}">
                     <div class="p-6">
                         <div class="flex items-start space-x-4">
-                            <div class="w-12 h-12 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 font-semibold">
-                                {{ substr($post->kader->nama_lengkap ?? 'User', 0, 2) }}
-                            </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-200 flex-shrink-0 flex items-center justify-center text-blue-800 font-semibold">
+                            {{ $post->author_initials }}
+                        </div>
                             <div class="flex-grow">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h3 class="font-bold text-gray-800">{{ $post->kader->nama_lengkap ?? 'Anonymous' }}</h3>
+                                    <h3 class="font-bold text-gray-800">{{ $post->author_name }}</h3>
                                         <span class="text-gray-500 text-sm">
                                             {{ $post->dibuat_pada ? $post->dibuat_pada->translatedFormat('d M Y H:i') : 'Tanggal tidak tersedia' }}
                                         </span>
