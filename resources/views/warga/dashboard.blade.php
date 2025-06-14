@@ -126,7 +126,7 @@
             <span class="font-medium">Event Saya</span>
         </a>
         
-        <a href="{{ route('warga.lokasi') }}" class="bg-white p-6 rounded-xl shadow-md text-center card-hover transition animate-fade-in hover:bg-blue-50">
+        <a href="{{ route('lokasi') }}" class="bg-white p-6 rounded-xl shadow-md text-center card-hover transition animate-fade-in hover:bg-blue-50">
             <div class="text-blue-600 mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

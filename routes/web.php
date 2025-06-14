@@ -156,14 +156,31 @@ Route::prefix('warga')->group(function () {
         Route::post('/cancel', [WargaController::class, 'cancelEvent'])->name('warga.cancel-event');
         });
         
-        Route::get('/warga/lokasi', [LokasiController::class, 'index'])->name('warga.lokasi');
-        Route::post('/lokasi/get-kelurahan', [LokasiController::class, 'getKelurahan'])->name('lokasi.get-kelurahan');
-        Route::post('/lokasi/get-rw', [LokasiController::class, 'getRw'])->name('lokasi.get-rw');
-        Route::post('/lokasi/get-rt', [LokasiController::class, 'getRt'])->name('lokasi.get-rt');
-        Route::post('/lokasi/search', [LokasiController::class, 'cariLokasi'])->name('lokasi.search');
+        Route::get('/warga/lokasi', [LokasiController::class, 'index'])->name('lokasi');
+    
+        // AJAX untuk dropdown cascading
+        Route::post('/lokasi/kelurahan', [LokasiController::class, 'getKelurahan'])
+            ->name('lokasi.kelurahan');
+        
+        Route::post('/lokasi/rw', [LokasiController::class, 'getRw'])
+            ->name('lokasi.rw');
+        
+        Route::post('/lokasi/rt', [LokasiController::class, 'getRt'])
+            ->name('lokasi.rt');
+        
+        Route::post('/lokasi/wilayah-koordinat', [LokasiController::class, 'getWilayahKoordinat'])
+            ->name('lokasi.wilayah-koordinat');
+        
+        Route::post('/lokasi/update-period', [LokasiController::class, 'updatePeriod'])
+            ->name('lokasi.update-period');
 
-        // Route untuk mendapatkan data peta
-        Route::get('/lokasi/map-data', [LokasiController::class, 'getMapData'])->name('lokasi.map-data');
+            Route::get('/lokasi/map-data', [LokasiController::class, 'getMapData'])->name('lokasi.map-data');
+
+            // Route untuk mendapatkan statistik real-time
+            Route::get('/lokasi/statistics', [LokasiController::class, 'getStatistics'])->name('lokasi.statistics');
+            // Route tambahan untuk fitur peta yang mungkin diperlukan di masa depan
+            Route::post('/lokasi/update-map-view', [LokasiController::class, 'updateMapView'])->name('lokasi.update-map-view');
+            Route::get('/lokasi/get-area-stats', [LokasiController::class, 'getAreaStats'])->name('lokasi.area-stats');
 
         // Route untuk mendapatkan data chart
         Route::get('/lokasi/chart-data', [LokasiController::class, 'updateChart'])->name('lokasi.chart-data');
