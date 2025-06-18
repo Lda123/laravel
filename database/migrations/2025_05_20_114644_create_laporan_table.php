@@ -23,8 +23,7 @@ return new class extends Migration
             $table->text('deskripsi');
             $table->enum('status', ['Pending', 'Terverifikasi', 'Selesai'])->default('Pending');
             $table->string('foto_pelaporan', 255)->nullable();
-            $table->timestamp('dibuat_pada')->useCurrent();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamps();
         });
     }
 

@@ -1,10 +1,9 @@
 @extends('layouts.warga')
 
-@section('title', 'Laporan Warga - DengueCare')
-
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 class="text-3xl font-bold text-[#1D3557]">Laporan Warga</h1>
         <div class="flex items-center space-x-2 mt-4 md:mt-0">
@@ -13,699 +12,421 @@
         </div>
     </div>
 
-    <!-- Info Cards -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-100 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-                <div class="flex items-center">
-                    <div class="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
-                        <i class="fas fa-exclamation-circle fa-sm"></i>
+    <!-- Form Laporan -->
+    <form id="reportForm" action="{{ route('warga.laporan.store') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow-lg p-6 space-y-6">
+        @csrf
+        
+        <!-- Jenis Laporan -->
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <i class="fas fa-tag text-gray-500 mr-2 text-sm"></i>
+                Jenis Laporan <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                @foreach(['Jentik Nyamuk', 'Kasus DBD', 'Lingkungan Kotor'] as $jenis)
+                <div class="report-type-option rounded-lg p-4 text-center cursor-pointer border-2 border-gray-200 transition-all duration-300" 
+                    data-value="{{ $jenis }}"
+                    role="button" 
+                    tabindex="0"
+                    aria-label="Pilih {{ $jenis }}">
+                    <div class="icon-container p-3 rounded-full inline-block mb-2 transition-all duration-300
+                        @if($jenis == 'Jentik Nyamuk') bg-blue-100 text-blue-600
+                        @elseif($jenis == 'Kasus DBD') bg-red-100 text-red-600
+                        @else bg-yellow-100 text-yellow-600 @endif">
+                        <i class="fas 
+                            @if($jenis == 'Jentik Nyamuk') fa-bug
+                            @elseif($jenis == 'Kasus DBD') fa-exclamation-triangle
+                            @else fa-trash @endif"></i>
                     </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500 mb-1">Total Laporan</p>
-                        <p class="text-lg font-medium text-gray-800">
-                            {{ $laporans->total() }} Laporan
-                        </p>
-                    </div>
+                    <h3 class="font-medium text-gray-800">{{ $jenis }}</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        @if($jenis == 'Jentik Nyamuk') Temuan jentik nyamuk di lingkungan
+                        @elseif($jenis == 'Kasus DBD') Laporan kasus DBD di sekitar
+                        @else Tempat berpotensi sarang nyamuk @endif
+                    </p>
                 </div>
+                @endforeach
             </div>
             
-            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-                <div class="flex items-center">
-                    <div class="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
-                        <i class="fas fa-check-circle fa-sm"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500 mb-1">Laporan Diterima</p>
-                        <p class="text-lg font-medium text-gray-800">
-                            {{ $laporans->where('status', 'Diterima')->count() }} Laporan
-                        </p>
-                    </div>
-                </div>
+            <input type="hidden" name="jenis_laporan" id="jenis_laporan" required value="{{ old('jenis_laporan') }}">
+            
+            @error('jenis_laporan')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Lokasi Kejadian -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Kecamatan -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <i class="fas fa-map-marker-alt text-gray-500 mr-2 text-sm"></i>
+                    Kecamatan <span class="text-red-500">*</span>
+                </label>
+                <select name="kecamatan_id" id="kecamatan" required 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">Pilih Kecamatan</option>
+                    @foreach($kecamatans as $kecamatan)
+                        <option value="{{ $kecamatan->id }}" {{ old('kecamatan_id') == $kecamatan->id ? 'selected' : '' }}>
+                            {{ $kecamatan->nama_kecamatan }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('kecamatan_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
             
-            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-                <div class="flex items-center">
-                    <div class="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
-                        <i class="fas fa-clock fa-sm"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500 mb-1">Dalam Proses</p>
-                        <p class="text-lg font-medium text-gray-800">
-                            {{ $laporans->where('status', 'Diproses')->count() }} Laporan
-                        </p>
-                    </div>
-                </div>
+            <!-- Kelurahan -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <i class="fas fa-map-marker-alt text-gray-500 mr-2 text-sm"></i>
+                    Kelurahan <span class="text-red-500">*</span>
+                </label>
+                <select name="kelurahan_id" id="kelurahan" required 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        {{ !old('kecamatan_id') ? 'disabled' : '' }}>
+                    <option value="">Pilih Kecamatan terlebih dahulu</option>
+                    @if(old('kecamatan_id'))
+                        @foreach(\App\Models\Kelurahan::where('kecamatan_id', old('kecamatan_id'))->get() as $kelurahan)
+                            <option value="{{ $kelurahan->id }}" {{ old('kelurahan_id') == $kelurahan->id ? 'selected' : '' }}>
+                                {{ $kelurahan->nama_kelurahan }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+                @error('kelurahan_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            
+            <!-- RW -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <i class="fas fa-map-marker-alt text-gray-500 mr-2 text-sm"></i>
+                    RW <span class="text-red-500">*</span>
+                </label>
+                <select name="rw_id" id="rw" required 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        {{ !old('kelurahan_id') ? 'disabled' : '' }}>
+                    <option value="">Pilih Kelurahan terlebih dahulu</option>
+                    @if(old('kelurahan_id'))
+                        @foreach(\App\Models\Rw::where('kelurahan_id', old('kelurahan_id'))->get() as $rw)
+                            <option value="{{ $rw->id }}" {{ old('rw_id') == $rw->id ? 'selected' : '' }}>
+                                RW {{ $rw->nomor_rw }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+                @error('rw_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            
+            <!-- RT -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <i class="fas fa-map-marker-alt text-gray-500 mr-2 text-sm"></i>
+                    RT <span class="text-red-500">*</span>
+                </label>
+                <select name="rt_id" id="rt" required 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        {{ !old('rw_id') ? 'disabled' : '' }}>
+                    <option value="">Pilih RW terlebih dahulu</option>
+                    @if(old('rw_id'))
+                        @foreach(\App\Models\Rt::where('rw_id', old('rw_id'))->get() as $rt)
+                            <option value="{{ $rt->id }}" {{ old('rt_id') == $rt->id ? 'selected' : '' }}>
+                                RT {{ $rt->nomor_rt }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+                @error('rt_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
         </div>
-    </div>
-
-    <!-- Form Laporan Baru -->
-    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b border-gray-200 flex items-center">
-            <i class="fas fa-plus-circle text-blue-500 mr-2"></i>
-            Buat Laporan Baru
-        </h2>
         
-        <form method="POST" action="{{ route('pelaporan.store') }}" enctype="multipart/form-data" class="space-y-5" id="reportForm">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <!-- Jenis Laporan -->
-                <div class="space-y-2 md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-tag text-gray-500 mr-2 text-sm"></i>
-                        Jenis Laporan <span class="text-red-500">*</span>
-                    </label>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="report-type rounded-lg p-4 text-center cursor-pointer" data-value="Jentik Nyamuk">
-                            <div class="bg-blue-100 p-3 rounded-full inline-block mb-2">
-                                <i class="fas fa-bug text-blue-600"></i>
-                            </div>
-                            <h3 class="font-medium text-gray-800">Jentik Nyamuk</h3>
-                            <p class="text-sm text-gray-500 mt-1">Temuan jentik nyamuk di lingkungan</p>
-                        </div>
-                        
-                        <div class="report-type rounded-lg p-4 text-center cursor-pointer" data-value="Kasus DBD">
-                            <div class="bg-red-100 p-3 rounded-full inline-block mb-2">
-                                <i class="fas fa-exclamation-triangle text-red-600"></i>
-                            </div>
-                            <h3 class="font-medium text-gray-800">Kasus DBD</h3>
-                            <p class="text-sm text-gray-500 mt-1">Laporan kasus DBD di sekitar</p>
-                        </div>
-                        
-                        <div class="report-type rounded-lg p-4 text-center cursor-pointer" data-value="Lingkungan Kotor">
-                            <div class="bg-yellow-100 p-3 rounded-full inline-block mb-2">
-                                <i class="fas fa-trash text-yellow-600"></i>
-                            </div>
-                            <h3 class="font-medium text-gray-800">Lingkungan Kotor</h3>
-                            <p class="text-sm text-gray-500 mt-1">Tempat berpotensi sarang nyamuk</p>
-                        </div>
-                    </div>
-                    <input type="hidden" name="jenis_laporan" id="jenis_laporan" required>
-                </div>
-
-                <!-- Lokasi Kejadian -->
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-map-marker-alt text-gray-500 mr-2 text-sm"></i>
-                        Kecamatan <span class="text-red-500">*</span>
-                    </label>
-                    <select name="kecamatan_id" id="kecamatan" required 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        <option value="">Pilih Kecamatan</option>
-                        @foreach($kecamatans as $kecamatan)
-                            <option value="{{ $kecamatan->id }}">{{ $kecamatan->nama_kecamatan }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-map-marked-alt text-gray-500 mr-2 text-sm"></i>
-                        Kelurahan <span class="text-red-500">*</span>
-                    </label>
-                    <select name="kelurahan_id" id="kelurahan" required 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" disabled>
-                        <option value="">Pilih Kelurahan</option>
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-road text-gray-500 mr-2 text-sm"></i>
-                        RW <span class="text-red-500">*</span>
-                    </label>
-                    <select name="rw_id" id="rw" required 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" disabled>
-                        <option value="">Pilih RW</option>
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-home text-gray-500 mr-2 text-sm"></i>
-                        RT <span class="text-red-500">*</span>
-                    </label>
-                    <select name="rt_id" id="rt" required 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" disabled>
-                        <option value="">Pilih RT</option>
-                    </select>
-                </div>
-                
-                <div class="space-y-2 md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-map-pin text-gray-500 mr-2 text-sm"></i>
-                        Alamat Detail <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="alamat_detail" required 
-                           placeholder="Contoh: Jl. Merdeka No. 10, depan warung Bu Siti" 
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                </div>
-                
-                <!-- Deskripsi -->
-                <div class="space-y-2 md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-align-left text-gray-500 mr-2 text-sm"></i>
-                        Deskripsi Lengkap <span class="text-red-500">*</span>
-                    </label>
-                    <textarea name="deskripsi" required placeholder="Jelaskan secara detail apa yang terjadi..." 
-                              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm h-32"></textarea>
-                </div>
-                
-                <!-- Upload Foto -->
-                <div class="space-y-2 md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <i class="fas fa-camera text-gray-500 mr-2 text-sm"></i>
-                        Unggah Foto Bukti
-                    </label>
-                    <div class="drop-zone rounded-lg p-6 text-center cursor-pointer border-2 border-dashed border-gray-300" id="fileDropArea">
-                        <i class="fas fa-image text-gray-400 text-3xl mb-2"></i>
-                        <p class="text-gray-500 mt-2">Seret dan lepas file foto di sini atau klik untuk memilih</p>
-                        <p class="text-xs text-gray-500 mt-2">Format: JPG/PNG, maksimal 2MB</p>
-                        <input type="file" name="foto_pelaporan" id="fileInput" class="hidden" accept="image/*">
-                    </div>
-                    <div id="imagePreviewContainer" class="mt-4 hidden">
-                        <div class="relative">
-                            <img id="imagePreview" src="#" alt="Preview Gambar" class="max-w-full h-auto rounded-lg border">
-                            <button type="button" id="removeImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
-                                <i class="fas fa-times text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Alamat Detail -->
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <i class="fas fa-map-pin text-gray-500 mr-2 text-sm"></i>
+                Alamat Detail <span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="alamat_detail" required 
+                   placeholder="Contoh: Jl. Merdeka No. 10, depan warung Bu Siti" 
+                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                   value="{{ old('alamat_detail') }}">
+            @error('alamat_detail')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <!-- Deskripsi -->
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <i class="fas fa-align-left text-gray-500 mr-2 text-sm"></i>
+                Deskripsi Lengkap <span class="text-red-500">*</span>
+            </label>
+            <textarea name="deskripsi" required placeholder="Jelaskan secara detail apa yang terjadi..." 
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm h-32">{{ old('deskripsi') }}</textarea>
+            @error('deskripsi')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <!-- Upload Foto -->
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <i class="fas fa-camera text-gray-500 mr-2 text-sm"></i>
+                Unggah Foto Bukti
+            </label>
+            <input type="file" name="foto_pelaporan" id="foto_pelaporan" 
+                   class="block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-lg file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-blue-50 file:text-blue-700
+                          hover:file:bg-blue-100"
+                   accept="image/jpeg,image/png,image/jpg,image/webp">
+            <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG, atau WEBP. Maksimal 2MB.</p>
             
-            <!-- Tombol Submit -->
-            <div class="flex justify-between pt-3">
-                <a href="{{ route('warga.dashboard') }}" 
-                   class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Kembali
-                </a>
-                <button type="submit" 
-                        class="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    <i class="fas fa-paper-plane mr-2"></i>
-                    Kirim Laporan
-                </button>
+            <div id="imagePreviewContainer" class="mt-4 hidden">
+                <div class="relative">
+                    <img id="imagePreview" src="#" alt="Preview Gambar" class="max-w-full h-auto rounded-lg border">
+                    <button type="button" id="removeImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
             </div>
-        </form>
-    </div>
+            @error('foto_pelaporan')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
 
-    <!-- Riwayat Laporan -->
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold text-[#1D3557] mb-4 flex items-center">
-            <i class="fas fa-history text-blue-500 mr-2"></i>
-            Riwayat Laporan Anda
-        </h2>
-        
-        @if($laporans->isEmpty())
-            <div class="bg-white rounded-lg shadow p-6 text-center">
-                <div class="text-gray-400 mb-3">
-                    <i class="fas fa-file-alt fa-3x"></i>
-                </div>
-                <p class="text-gray-600">Belum ada data laporan yang dibuat</p>
-            </div>
-        @else
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Laporan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($laporans as $laporan)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                    {{ $laporan->created_at->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                                    {{ $laporan->jenis_laporan }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                    RT {{ $laporan->rt->nomor_rt ?? '-' }}, RW {{ $laporan->rw->nomor_rw ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @php
-                                        $statusClass = [
-                                            'Diterima' => 'bg-green-100 text-green-800',
-                                            'Diproses' => 'bg-yellow-100 text-yellow-800',
-                                            'Ditolak' => 'bg-red-100 text-red-800',
-                                            'Pending' => 'bg-gray-100 text-gray-800'
-                                        ];
-                                        $statusClass = $statusClass[$laporan->status] ?? 'bg-gray-100 text-gray-800';
-                                    @endphp
-                                    <span class="{{ $statusClass }} px-2 py-1 rounded-full text-xs font-medium">
-                                        {{ $laporan->status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <button type="button" 
-                                            data-laporan-id="{{ $laporan->id }}" 
-                                            class="detail-btn text-blue-500 hover:text-blue-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded px-2 py-1">
-                                        <i class="fas fa-eye mr-1"></i> Detail
-                                    </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
-                    {{ $laporans->links() }}
-                </div>
-            </div>
-        @endif
-    </div>
-</div>
-
-<!-- Modal Detail Laporan -->
-<div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-[#1D3557]">Detail Laporan</h3>
-            <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
+        <!-- Tombol Submit -->
+        <div class="flex justify-between pt-3">
+            <a href="{{ route('warga.dashboard') }}" 
+               class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Kembali
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <i class="fas fa-paper-plane mr-2"></i>
+                Kirim Laporan
             </button>
         </div>
-        
-        <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="text-center py-8 hidden">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p class="mt-2 text-gray-600">Memuat data...</p>
-        </div>
-        
-        <div id="modalContent" class="space-y-4 mb-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Tanggal:</p>
-                    <p id="detail-tanggal" class="text-gray-800 font-medium"></p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Jenis Laporan:</p>
-                    <p id="detail-jenis" class="text-gray-800 font-medium"></p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Kecamatan:</p>
-                    <p id="detail-kecamatan" class="text-gray-800 font-medium"></p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Kelurahan:</p>
-                    <p id="detail-kelurahan" class="text-gray-800 font-medium"></p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">RW:</p>
-                    <p id="detail-rw" class="text-gray-800 font-medium"></p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">RT:</p>
-                    <p id="detail-rt" class="text-gray-800 font-medium"></p>
-                </div>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-500">Alamat Detail:</p>
-                <p id="detail-alamat" class="text-gray-800 font-medium"></p>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-500">Status:</p>
-                <span id="detail-status-badge" class="px-3 py-1 rounded-full text-sm font-medium"></span>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-500">Deskripsi:</p>
-                <p id="detail-deskripsi" class="bg-gray-50 p-3 rounded text-gray-800"></p>
-            </div>
-            
-            <div id="foto-container">
-                <p class="text-sm font-medium text-gray-500 mb-2">Bukti Foto:</p>
-                <div class="border rounded-lg overflow-hidden">
-                    <img id="detail-foto" src="" class="w-full h-auto max-h-64 object-contain hidden" alt="Bukti Foto">
-                    <div id="no-foto" class="p-4 text-center text-gray-500 bg-gray-50">
-                        <i class="fas fa-image fa-2x mb-2"></i>
-                        <p>Tidak ada foto</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="catatan-container" class="hidden">
-                <p class="text-sm font-medium text-gray-500">Catatan Petugas:</p>
-                <p id="detail-catatan" class="bg-blue-50 p-3 rounded text-gray-800"></p>
-            </div>
-        </div>
-    </div>
+    </form>
 </div>
-@endsection
 
-@section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Report type selection
-    $('.report-type').on('click', function() {
-        $('.report-type').removeClass('active border-blue-500 bg-blue-50');
-        $(this).addClass('active border-blue-500 bg-blue-50');
-        $('#jenis_laporan').val($(this).data('value'));
-    });
-    
-    // Hierarchical dropdown functionality
-    $('#kecamatan').on('change', function() {
-        const kecamatanId = $(this).val();
-        const kelurahanDropdown = $('#kelurahan');
+    $('.report-type-option').click(function() {
+        // Remove active class from all options
+        $('.report-type-option').removeClass('border-blue-500 bg-blue-50');
         
-        if (kecamatanId) {
-            $.post('{{ route("get-kelurahan") }}', {
-                _token: '{{ csrf_token() }}',
-                kecamatan_id: kecamatanId
-            })
-            .done(function(data) {
-                kelurahanDropdown.html(data).prop('disabled', false);
-                $('#rw').html('<option value="">Pilih RW</option>').prop('disabled', true);
-                $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
+        // Add active class to selected option
+        $(this).addClass('border-blue-500 bg-blue-50');
+        
+        // Set the hidden input value
+        const selectedValue = $(this).data('value');
+        $('#jenis_laporan').val(selectedValue);
+    });
+
+    // Set initial selection if there's old input
+    const oldJenisLaporan = "{{ old('jenis_laporan') }}";
+    if (oldJenisLaporan) {
+        $(`.report-type-option[data-value="${oldJenisLaporan}"]`).addClass('border-blue-500 bg-blue-50');
+    }
+
+    // Fungsi untuk reset dropdown yang tergantung
+    function resetDependentDropdowns(currentLevel) {
+        const levels = ['kecamatan', 'kelurahan', 'rw', 'rt'];
+        const currentIndex = levels.indexOf(currentLevel);
+        
+        // Reset semua dropdown setelah current level
+        for (let i = currentIndex + 1; i < levels.length; i++) {
+            const dropdown = levels[i];
+            $('#' + dropdown).html('<option value="">Pilih ' + dropdown.toUpperCase() + ' terlebih dahulu</option>').prop('disabled', true);
+        }
+    }
+
+    // Fungsi untuk toggle dropdown dan loading
+    function toggleDropdown(dropdownId, enable, loadingId = null) {
+        const $dropdown = $('#' + dropdownId);
+        $dropdown.prop('disabled', !enable);
+        
+        if (loadingId) {
+            if (enable) {
+                $('#' + loadingId).addClass('hidden');
+            } else {
+                $('#' + loadingId).removeClass('hidden');
+            }
+        }
+    }
+
+    // Kecamatan change handler
+    $('#kecamatan').change(function() {
+        const kecamatan_id = $(this).val();
+        resetDependentDropdowns('kecamatan');
+
+        if (kecamatan_id) {
+            toggleDropdown('kelurahan', false);
+            
+            // Tambahkan loading indicator
+            $('#kelurahan').html('<option value="">Memuat data...</option>');
+
+            $.ajax({
+                url: "{{ route('warga.laporan.get.kelurahan') }}",
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    kecamatan_id: kecamatan_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#kelurahan').html(data.options);
+                        toggleDropdown('kelurahan', true);
+                    } else {
+                        $('#kelurahan').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('kelurahan', false);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#kelurahan').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('kelurahan', false);
+                }
             });
-        } else {
-            kelurahanDropdown.html('<option value="">Pilih Kelurahan</option>').prop('disabled', true);
-            $('#rw').html('<option value="">Pilih RW</option>').prop('disabled', true);
-            $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
         }
     });
-    
-    $('#kelurahan').on('change', function() {
-        const kelurahanId = $(this).val();
-        const rwDropdown = $('#rw');
-        
-        if (kelurahanId) {
-            $.post('{{ route("get-rw") }}', {
-                _token: '{{ csrf_token() }}',
-                kelurahan_id: kelurahanId
-            })
-            .done(function(data) {
-                rwDropdown.html(data).prop('disabled', false);
-                $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
+
+    // Kelurahan change handler
+    $('#kelurahan').change(function() {
+        const kelurahan_id = $(this).val();
+        resetDependentDropdowns('kelurahan');
+
+        if (kelurahan_id) {
+            toggleDropdown('rw', false);
+            
+            // Tambahkan loading indicator
+            $('#rw').html('<option value="">Memuat data...</option>');
+
+            $.ajax({
+                url: "{{ route('warga.laporan.get.rw') }}",
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    kelurahan_id: kelurahan_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#rw').html(data.options);
+                        toggleDropdown('rw', true);
+                    } else {
+                        $('#rw').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('rw', false);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#rw').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('rw', false);
+                }
             });
-        } else {
-            rwDropdown.html('<option value="">Pilih RW</option>').prop('disabled', true);
-            $('#rt').html('<option value="">Pilih RT</option>').prop('disabled', true);
         }
     });
-    
-    $('#rw').on('change', function() {
-        const rwId = $(this).val();
-        const rtDropdown = $('#rt');
-        
-        if (rwId) {
-            $.post('{{ route("get-rt") }}', {
-                _token: '{{ csrf_token() }}',
-                rw_id: rwId
-            })
-            .done(function(data) {
-                rtDropdown.html(data).prop('disabled', false);
+
+    // RW change handler
+    $('#rw').change(function() {
+        const rw_id = $(this).val();
+        resetDependentDropdowns('rw');
+
+        if (rw_id) {
+            toggleDropdown('rt', false);
+            
+            // Tambahkan loading indicator
+            $('#rt').html('<option value="">Memuat data...</option>');
+
+            $.ajax({
+                url: "{{ route('warga.laporan.get.rt') }}",
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    rw_id: rw_id
+                },
+                success: function(data) {
+                    if (data.options) {
+                        $('#rt').html(data.options);
+                        toggleDropdown('rt', true);
+                    } else {
+                        $('#rt').html('<option value="">Data tidak ditemukan</option>');
+                        toggleDropdown('rt', false);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#rt').html('<option value="">Gagal memuat data</option>');
+                    toggleDropdown('rt', false);
+                }
             });
-        } else {
-            rtDropdown.html('<option value="">Pilih RT</option>').prop('disabled', true);
         }
     });
-    
-    // File upload handling
-    const fileInput = $('#fileInput');
-    const fileDropArea = $('#fileDropArea');
-    const imagePreviewContainer = $('#imagePreviewContainer');
-    const imagePreview = $('#imagePreview');
-    
-    fileDropArea.on('click', function() {
-        fileInput.click();
-    });
-    
-    fileInput.on('change', function() {
-        const file = this.files[0];
+
+    // Preview image before upload
+    $('#foto_pelaporan').change(function(e) {
+        const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                imagePreview.attr('src', e.target.result);
-                imagePreviewContainer.removeClass('hidden');
-                fileDropArea.addClass('hidden');
+                $('#imagePreview').attr('src', e.target.result);
+                $('#imagePreviewContainer').removeClass('hidden');
             }
             reader.readAsDataURL(file);
         }
     });
-    
-    $('#removeImage').on('click', function() {
-        fileInput.val('');
-        imagePreviewContainer.addClass('hidden');
-        fileDropArea.removeClass('hidden');
+
+    // Remove image
+    $('#removeImage').click(function() {
+        $('#foto_pelaporan').val('');
+        $('#imagePreviewContainer').addClass('hidden');
     });
-    
-    // Drag and drop functionality
-    fileDropArea.on('dragover dragenter', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).addClass('border-blue-500 bg-blue-50');
-    });
-    
-    fileDropArea.on('dragleave dragend drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).removeClass('border-blue-500 bg-blue-50');
-    });
-    
-    fileDropArea.on('drop', function(e) {
-        const files = e.originalEvent.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput[0].files = files;
-            fileInput.trigger('change');
-        }
-    });
-    
-    // Form submission
-    $('#reportForm').on('submit', function(e) {
-        e.preventDefault();
+    // Inisialisasi dropdown jika ada data old
+    var oldKecamatanId = "{{ old('kecamatan_id') }}";
+    if (oldKecamatanId) {
+        $('#kecamatan').val(oldKecamatanId).trigger('change');
         
-        // Validate report type
-        if (!$('#jenis_laporan').val()) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: 'Silakan pilih jenis laporan terlebih dahulu',
-                showConfirmButton: true
-            });
-            return;
-        }
-        
-        const formData = new FormData(this);
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        
-        // Disable submit button
-        submitBtn.prop('disabled', true);
-        submitBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...');
-        
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        showConfirmButton: true,
-                        timer: 3000
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                }
-            },
-            error: function(xhr) {
-                let errorMessage = 'Terjadi kesalahan saat mengirim laporan';
+        // Gunakan promise untuk menangani async chain
+        setTimeout(function() {
+            var oldKelurahanId = "{{ old('kelurahan_id') }}";
+            if (oldKelurahanId) {
+                $('#kelurahan').val(oldKelurahanId).trigger('change');
                 
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    const errors = xhr.responseJSON.errors;
-                    errorMessage = Object.values(errors).flat().join('<br>');
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    html: errorMessage,
-                    showConfirmButton: true
-                });
-            },
-            complete: function() {
-                // Re-enable submit button
-                submitBtn.prop('disabled', false);
-                submitBtn.html(originalText);
+                setTimeout(function() {
+                    var oldRwId = "{{ old('rw_id') }}";
+                    if (oldRwId) {
+                        $('#rw').val(oldRwId).trigger('change');
+                        
+                        setTimeout(function() {
+                            var oldRtId = "{{ old('rt_id') }}";
+                            if (oldRtId) {
+                                $('#rt').val(oldRtId);
+                            }
+                        }, 300);
+                    }
+                }, 300);
             }
-        });
-    });
-    
-    // Modal functionality
-    const modal = $('#detailModal');
-    const closeModal = $('#closeModal');
-    const loadingIndicator = $('#loadingIndicator');
-    const modalContent = $('#modalContent');
-    
-    // Show modal
-    function showModal() {
-        modal.removeClass('hidden');
-        $('body').css('overflow', 'hidden');
-    }
-    
-    // Hide modal
-    function hideModal() {
-        modal.addClass('hidden');
-        $('body').css('overflow', 'auto');
-    }
-    
-    // Close modal when clicking outside
-    modal.on('click', function(e) {
-        if ($(e.target).is(modal)) {
-            hideModal();
-        }
-    });
-    
-    // Close modal button
-    closeModal.on('click', hideModal);
-    
-    // Show loading state
-    function showLoading(show) {
-        if (show) {
-            loadingIndicator.removeClass('hidden');
-            modalContent.addClass('hidden');
-        } else {
-            loadingIndicator.addClass('hidden');
-            modalContent.removeClass('hidden');
-        }
-    }
-    
-    // Detail button click
-    $(document).on('click', '.detail-btn', function() {
-        const laporanId = $(this).data('laporan-id');
-        showLaporanDetail(laporanId);
-    });
-    
-    // Show laporan detail
-    function showLaporanDetail(laporanId) {
-        showModal();
-        showLoading(true);
-        
-        $.get(`/warga/pelaporan/${laporanId}`, {
-            _token: '{{ csrf_token() }}'
-        })
-        .done(function(response) {
-            if (response.success) {
-                populateModal(response.data);
-            } else {
-                throw new Error(response.message || 'Gagal memuat data');
-            }
-        })
-        .fail(function(xhr) {
-            let errorMessage = 'Gagal memuat detail laporan';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMessage = xhr.responseJSON.message;
-            }
-            throw new Error(errorMessage);
-        })
-        .always(function() {
-            showLoading(false);
-        })
-        .catch(function(error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message,
-                showConfirmButton: true
-            });
-            hideModal();
-        });
-    }
-    
-    // Populate modal with data
-    function populateModal(data) {
-        // Format tanggal
-        const formattedDate = new Date(data.created_at).toLocaleDateString('id-ID', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        // Isi data ke modal
-        $('#detail-tanggal').text(formattedDate);
-        $('#detail-jenis').text(data.jenis_laporan);
-        $('#detail-kecamatan').text(data.kecamatan?.nama_kecamatan || '-');
-        $('#detail-kelurahan').text(data.kelurahan?.nama_kelurahan || '-');
-        $('#detail-rw').text(data.rw?.nomor_rw ? 'RW ' + data.rw.nomor_rw : '-');
-        $('#detail-rt').text(data.rt?.nomor_rt ? 'RT ' + data.rt.nomor_rt : '-');
-        $('#detail-alamat').text(data.alamat_detail || '-');
-        $('#detail-deskripsi').text(data.deskripsi || 'Tidak ada deskripsi');
-        
-        // Set status badge
-        const statusBadge = $('#detail-status-badge');
-        statusBadge.text(data.status || '-');
-        statusBadge.removeClass().addClass('px-3 py-1 rounded-full text-sm font-medium');
-        
-        switch(data.status) {
-            case 'Diterima':
-                statusBadge.addClass('bg-green-100 text-green-800');
-                break;
-            case 'Diproses':
-                statusBadge.addClass('bg-yellow-100 text-yellow-800');
-                break;
-            case 'Ditolak':
-                statusBadge.addClass('bg-red-100 text-red-800');
-                break;
-            default:
-                statusBadge.addClass('bg-gray-100 text-gray-800');
-        }
-        
-        // Handle photo
-        const fotoElement = $('#detail-foto');
-        const noFotoElement = $('#no-foto');
-        
-        if (data.foto_pelaporan) {
-            fotoElement.attr('src', `/laporan_warga/${data.foto_pelaporan}`);
-            fotoElement.removeClass('hidden');
-            noFotoElement.hide();
-            
-            fotoElement.on('error', function() {
-                fotoElement.addClass('hidden');
-                noFotoElement.show().find('p').text('Gagal memuat foto');
-            });
-        } else {
-            fotoElement.addClass('hidden');
-            noFotoElement.show().find('p').text('Tidak ada foto');
-        }
-        
-        // Handle catatan
-        const catatanContainer = $('#catatan-container');
-        const catatanElement = $('#detail-catatan');
-        
-        if (data.catatan) {
-            catatanElement.text(data.catatan);
-            catatanContainer.removeClass('hidden');
-        } else {
-            catatanContainer.addClass('hidden');
-        }
+        }, 300);
     }
 });
 </script>
+
 @endsection

@@ -22,8 +22,7 @@ class Laporan extends Model
         'status',
         'foto_pelaporan'
     ];
-
-    protected $dates = ['dibuat_pada'];
+    protected $dates = ['created_at', 'updated_at'];
 
     const STATUS_PENDING = 'Pending';
     const STATUS_VERIFIED = 'Terverifikasi';
@@ -57,5 +56,11 @@ class Laporan extends Model
     public function kecamatan()
     {
         return $this->belongsTo(Kecamatan::class);
+    }
+
+    // Accessor untuk foto pelaporan
+    public function getFotoPelaporanUrlAttribute()
+    {
+        return $this->foto_pelaporan ? asset('storage/' . $this->foto_pelaporan) : null;
     }
 }

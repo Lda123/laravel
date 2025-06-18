@@ -26,7 +26,7 @@
         <div class="flex-grow">
             <!-- New Post Card (Hidden by default) -->
             <div id="newPostCard" class="bg-white rounded-xl shadow-md mb-6 hidden">
-                <form method="POST" action="{{ route('forum.post.store') }}" enctype="multipart/form-data" class="p-6">
+                <form method="POST" action="{{ route('warga.forum.post.store') }}" enctype="multipart/form-data" class="p-6">
                     @csrf
                     <div class="flex items-start space-x-4">
                         <div class="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-semibold">
@@ -108,7 +108,7 @@
                     <!-- Comment Section -->
                     <div id="commentsSection-{{ $post->id }}" class="bg-gray-50 border-t border-gray-200 rounded-b-xl p-4 hidden">
                         <!-- Comment Form -->
-                        <form method="POST" action="{{ route('forum.comment.store') }}" enctype="multipart/form-data" class="mb-4">
+                        <form method="POST" action="{{ route('warga.forum.comment.store') }}" enctype="multipart/form-data" class="mb-4">
                             @csrf
                             <input type="hidden" name="parent_id" value="{{ $post->id }}">
                             <div class="flex space-x-3">
@@ -213,6 +213,26 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Image preview for new post
+    const gambarInput = document.getElementById('gambarInput');
+        if (gambarInput) {
+            gambarInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const previewContainer = document.getElementById('imagePreview');
+                const previewImage = document.getElementById('previewImage');
+                
+                if (file) {
+                    previewContainer.classList.remove('hidden');
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImage.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
     // Apply animation delays
     document.querySelectorAll('[data-animation-delay]').forEach(function(element) {
         const delay = element.getAttribute('data-animation-delay');
@@ -257,29 +277,12 @@ function showNewPostForm() {
     }
 }
 
-// Image preview for new post
-const gambarInput = document.getElementById('gambarInput');
-if (gambarInput) {
-    gambarInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const previewContainer = document.getElementById('imagePreview');
-        const previewImage = document.getElementById('previewImage');
-        
-        if (file) {
-            previewContainer.classList.remove('hidden');
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                previewImage.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
 function removeImage() {
-    document.getElementById('gambarInput').value = '';
-    document.getElementById('imagePreview').classList.add('hidden');
+    const gambarInput = document.getElementById('gambarInput');
+    const previewContainer = document.getElementById('imagePreview');
+    
+    if (gambarInput) gambarInput.value = '';
+    if (previewContainer) previewContainer.classList.add('hidden');
 }
 
 // Image preview for comment

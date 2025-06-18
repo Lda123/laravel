@@ -17,19 +17,11 @@
             <div class="p-8">
                 <!-- Profile Picture Upload -->
                 <div class="flex flex-col items-center mb-10">
-                    <!-- Ganti bagian tampilan gambar profil -->
                     <div class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-200 shadow-lg mb-4">
-                        @if($warga->profile_pict)
-                            <img src="{{ Storage::url($warga->profile_pict) . '?' . time() }}" 
-                                alt="Foto profil {{ $warga->nama_lengkap }}"
-                                class="w-full h-full object-cover"
-                                id="profilePreview">
-                        @else
-                            <img src="{{ asset('images/default-profile.jpg') }}" 
-                                alt="Foto profil default"
-                                class="w-full h-full object-cover"
-                                id="profilePreview">
-                        @endif
+                        <img src="{{ $warga->profile_pict ? Storage::url($warga->profile_pict) : asset('images/default-profile.jpg') }}" 
+                             alt="Foto profil {{ $warga->nama_lengkap }}"
+                             class="w-full h-full object-cover"
+                             id="profilePreview">
                         <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                             <span class="text-white text-sm font-medium">Ubah Foto</span>
                         </div>
@@ -88,7 +80,7 @@
                         <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Password Saat Ini (untuk verifikasi)</label>
                         <div class="relative">
                             <input type="password" name="current_password" id="current_password" 
-                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-12">
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-12">
                             <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
                                     onclick="togglePasswordVisibility('current_password')">
                                 <i class="fas fa-eye" id="current_password_icon"></i>
@@ -105,7 +97,7 @@
                         <div class="relative">
                             <input type="password" name="new_password" id="new_password" 
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10">
-                                   <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                            <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
                                     onclick="togglePasswordVisibility('new_password')">
                                 <i class="fas fa-eye" id="new_password_icon"></i>
                             </button>
@@ -121,7 +113,7 @@
                         <div class="relative">
                             <input type="password" name="new_password_confirmation" id="new_password_confirmation" 
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10">
-                                   <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                            <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none" 
                                     onclick="togglePasswordVisibility('new_password_confirmation')">
                                 <i class="fas fa-eye" id="new_password_confirmation_icon"></i>
                             </button>
@@ -176,10 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const reader = new FileReader();
             reader.onload = function(event) {
                 profilePreview.src = event.target.result;
-                profilePreview.classList.add('ring', 'ring-blue-300', 'animate-pulse');
-                setTimeout(() => {
-                    profilePreview.classList.remove('animate-pulse');
-                }, 600);
             };
             reader.readAsDataURL(e.target.files[0]);
         }

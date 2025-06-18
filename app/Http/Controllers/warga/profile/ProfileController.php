@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Warga\profile;
 
 use App\Http\Controllers\Controller;
+use App\Models\EventWarga;
 use App\Models\Warga;
 use App\Models\TrackingHarian;
+use App\Models\SavedEdukasiWarga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
@@ -33,21 +33,25 @@ class ProfileController extends Controller
         // Generate correct profile picture URL
         $profilePictureUrl = null;
         if ($warga->profile_pict) {
-            // Normalize path - remove duplicate 'profile_pictures/warga/' if exists
             $normalizedPath = str_replace('profile_pictures/warga/profile_pictures/warga/', 'profile_pictures/warga/', $warga->profile_pict);
             $profilePictureUrl = Storage::disk('public')->exists($normalizedPath) 
                 ? asset('storage/'.$normalizedPath) 
                 : null;
         }
 
+        // Count saved edukasi and events
+        $savedEdukasiCount = SavedEdukasiWarga::where('warga_id', $warga->id)->count();
+        $savedEventCount = EventWarga::where('id_warga', $warga->id)->count();
+
         return view('warga.profile', [
             'user' => $warga,
             'home_condition' => $homeCondition,
             'status_display' => $statusDisplay,
-            'profile_picture_url' => $profilePictureUrl
+            'profile_picture_url' => $profilePictureUrl,
+            'savedEdukasiCount' => $savedEdukasiCount,
+            'savedEventCount' => $savedEventCount
         ]);
     }
-
     public function uploadProfilePicture(Request $request)
     {
         $request->validate([

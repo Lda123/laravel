@@ -44,25 +44,18 @@ class LokasiController extends Controller
                 ->get();
         }
 
-        // Get real stats from database
-        $stats = $this->getAreaStatistics();
+        // UBAH: Get real stats from tracking harian bulan berjalan
+        $stats = $this->getTrackingStatistics();
 
         // Default user location (Surabaya center)
         $user_location = [
             'lat' => -7.2575,
             'lng' => 112.7521,
-            'title' => 'Surabaya',
-            'rt' => '',
-            'rw' => '',
-            'kelurahan' => '',
-            'kecamatan' => ''
+            'title' => 'Surabaya'
         ];
 
-        // Get real data
-        $tracking_data = $this->getTrackingData();
-        $rawan_areas = $this->getRawanAreas();
-        $rtMarkers = $this->getRtMarkers();
-        $period = 'harian';
+        // UBAH: period menjadi current_month
+        $period = 'current_month';
         $defaultLat = -7.2575;
         $defaultLng = 112.7521;
 
@@ -73,15 +66,13 @@ class LokasiController extends Controller
             'rts',
             'stats',
             'user_location',
-            'tracking_data',
-            'rawan_areas',
-            'rtMarkers',
             'period',
             'defaultLat',
             'defaultLng'
         ));
     }
 
+    // Tidak ada perubahan pada method dropdown
     public function getKelurahan(Request $request)
     {
         $kecamatan_id = $request->kecamatan_id;
@@ -127,25 +118,8 @@ class LokasiController extends Controller
         return response()->json(['options' => $options]);
     }
 
-    public function updatePeriod(Request $request)
-    {
-        // This will be implemented later when you add chart functionality
-        return response()->json([
-            'success' => false,
-            'message' => 'Fitur chart belum diimplementasikan'
-        ]);
-    }
-
-    public function updateChart(Request $request)
-    {
-        // This will be implemented later when you add chart functionality
-        return response()->json([
-            'success' => false,
-            'message' => 'Fitur chart belum diimplementasikan'
-        ]);
-    }
-
-    public function getMapData(Request $request)
+    // UBAH: Main method untuk mendapatkan data tracking harian map - bulan berjalan
+    public function getTrackingMapData(Request $request)
     {
         try {
             // Default koordinat Surabaya
@@ -158,198 +132,87 @@ class LokasiController extends Controller
             $mapData = [];
             $coordinates = $defaultCoordinates;
 
-            // Jika ada filter wilayah yang dipilih
-            if ($request->filled(['kecamatan', 'kelurahan', 'rw', 'rt'])) {
-                $rt = Rt::with(['rw.kelurahan.kecamatan'])
-                    ->where('id', $request->rt)
-                    ->first();
+            // Base query untuk RT dengan koordinat
+            $rtsQuery = Rt::with(['rw.kelurahan.kecamatan'])
+                ->whereNotNull('koordinat_lat')
+                ->whereNotNull('koordinat_lng');
 
-                if ($rt && $rt->koordinat_lat && $rt->koordinat_lng) {
-                    $coordinates = [
-                        'lat' => (float) $rt->koordinat_lat,
-                        'lng' => (float) $rt->koordinat_lng,
-                        'zoom' => 16
-                    ];
-
-                    // Get real tracking data untuk RT ini
-                    $trackingStats = $this->getTrackingStatsForRt($rt->id);
-
-                    // Data marker untuk RT yang dipilih
-                    $mapData[] = [
-                        'id' => $rt->id,
-                        'lat' => (float) $rt->koordinat_lat,
-                        'lng' => (float) $rt->koordinat_lng,
-                        'title' => "RT {$rt->nomor_rt}",
-                        'subtitle' => "RW {$rt->rw->nomor_rw}, {$rt->rw->kelurahan->nama_kelurahan}",
-                        'kecamatan' => $rt->rw->kelurahan->kecamatan->nama_kecamatan,
-                        'type' => 'rt_selected',
-                        'status' => $trackingStats['status'],
-                        'cases' => $trackingStats['tidak_aman'],
-                        'population' => $trackingStats['total_warga'],
-                        'popup_content' => $this->generatePopupContent($rt, $trackingStats)
-                    ];
-                }
-            } elseif ($request->filled(['kecamatan', 'kelurahan', 'rw'])) {
-                // Tampilkan semua RT dalam RW yang dipilih
-                $rts = Rt::with(['rw.kelurahan.kecamatan'])
-                    ->where('rw_id', $request->rw)
-                    ->whereNotNull('koordinat_lat')
-                    ->whereNotNull('koordinat_lng')
-                    ->get();
-
-                foreach ($rts as $rt) {
-                    $trackingStats = $this->getTrackingStatsForRt($rt->id);
-                    
-                    $mapData[] = [
-                        'id' => $rt->id,
-                        'lat' => (float) $rt->koordinat_lat,
-                        'lng' => (float) $rt->koordinat_lng,
-                        'title' => "RT {$rt->nomor_rt}",
-                        'subtitle' => "RW {$rt->rw->nomor_rw}",
-                        'kecamatan' => $rt->rw->kelurahan->kecamatan->nama_kecamatan,
-                        'kelurahan' => $rt->rw->kelurahan->nama_kelurahan,
-                        'type' => 'rt_in_rw',
-                        'status' => $trackingStats['status'],
-                        'cases' => $trackingStats['tidak_aman'],
-                        'population' => $trackingStats['total_warga'],
-                        'popup_content' => $this->generatePopupContent($rt, $trackingStats)
-                    ];
-                }
-
-                // Set koordinat ke RT pertama jika ada
-                if ($rts->isNotEmpty()) {
-                    $firstRt = $rts->first();
-                    $coordinates = [
-                        'lat' => (float) $firstRt->koordinat_lat,
-                        'lng' => (float) $firstRt->koordinat_lng,
-                        'zoom' => 15
-                    ];
-                }
-            } elseif ($request->filled(['kecamatan', 'kelurahan'])) {
-                // Tampilkan semua RT dalam Kelurahan yang dipilih
-                $rts = Rt::with(['rw.kelurahan.kecamatan'])
-                    ->whereHas('rw.kelurahan', function($q) use ($request) {
-                        $q->where('id', $request->kelurahan);
-                    })
-                    ->whereNotNull('koordinat_lat')
-                    ->whereNotNull('koordinat_lng')
-                    ->get();
-
-                foreach ($rts as $rt) {
-                    $trackingStats = $this->getTrackingStatsForRt($rt->id);
-                    
-                    $mapData[] = [
-                        'id' => $rt->id,
-                        'lat' => (float) $rt->koordinat_lat,
-                        'lng' => (float) $rt->koordinat_lng,
-                        'title' => "RT {$rt->nomor_rt}/RW {$rt->rw->nomor_rw}",
-                        'subtitle' => $rt->rw->kelurahan->nama_kelurahan,
-                        'kecamatan' => $rt->rw->kelurahan->kecamatan->nama_kecamatan,
-                        'type' => 'rt_in_kelurahan',
-                        'status' => $trackingStats['status'],
-                        'cases' => $trackingStats['tidak_aman'],
-                        'population' => $trackingStats['total_warga'],
-                        'popup_content' => $this->generatePopupContent($rt, $trackingStats)
-                    ];
-                }
-
-                if ($rts->isNotEmpty()) {
-                    // Hitung center dari semua RT
-                    $avgLat = $rts->avg('koordinat_lat');
-                    $avgLng = $rts->avg('koordinat_lng');
-                    $coordinates = [
-                        'lat' => (float) $avgLat,
-                        'lng' => (float) $avgLng,
-                        'zoom' => 14
-                    ];
-                }
+            // Apply filters berdasarkan request
+            if ($request->filled('rt')) {
+                $rtsQuery->where('id', $request->rt);
+                $coordinates['zoom'] = 16;
+            } elseif ($request->filled('rw')) {
+                $rtsQuery->where('rw_id', $request->rw);
+                $coordinates['zoom'] = 15;
+            } elseif ($request->filled('kelurahan')) {
+                $rtsQuery->whereHas('rw', function($q) use ($request) {
+                    $q->where('kelurahan_id', $request->kelurahan);
+                });
+                $coordinates['zoom'] = 14;
+            } elseif ($request->filled('kecamatan')) {
+                $rtsQuery->whereHas('rw.kelurahan', function($q) use ($request) {
+                    $q->where('kecamatan_id', $request->kecamatan);
+                });
+                $coordinates['zoom'] = 13;
             } else {
-                // Tampilkan semua RT yang memiliki koordinat (untuk tampilan awal)
-                $rts = Rt::with(['rw.kelurahan.kecamatan'])
-                    ->whereNotNull('koordinat_lat')
-                    ->whereNotNull('koordinat_lng')
-                    ->limit(50) // Batasi untuk performa
-                    ->get();
-
-                foreach ($rts as $rt) {
-                    $trackingStats = $this->getTrackingStatsForRt($rt->id);
-                    
-                    $mapData[] = [
-                        'id' => $rt->id,
-                        'lat' => (float) $rt->koordinat_lat,
-                        'lng' => (float) $rt->koordinat_lng,
-                        'title' => "RT {$rt->nomor_rt}/RW {$rt->rw->nomor_rw}",
-                        'subtitle' => "{$rt->rw->kelurahan->nama_kelurahan}, {$rt->rw->kelurahan->kecamatan->nama_kecamatan}",
-                        'type' => 'rt_general',
-                        'status' => $trackingStats['status'],
-                        'cases' => $trackingStats['tidak_aman'],
-                        'population' => $trackingStats['total_warga'],
-                        'popup_content' => $this->generatePopupContent($rt, $trackingStats)
-                    ];
-                }
+                // Limit untuk performa jika tidak ada filter
+                $rtsQuery->limit(100);
             }
+
+            $rts = $rtsQuery->get();
+
+            // Process each RT untuk mendapatkan data tracking bulan berjalan
+            foreach ($rts as $rt) {
+                $trackingData = $this->getTrackingDataForRt($rt->id);
+                
+                $mapData[] = [
+                    'id' => $rt->id,
+                    'lat' => (float) $rt->koordinat_lat,
+                    'lng' => (float) $rt->koordinat_lng,
+                    'title' => "RT {$rt->nomor_rt}/RW {$rt->rw->nomor_rw}",
+                    'subtitle' => "{$rt->rw->kelurahan->nama_kelurahan}",
+                    'kecamatan' => $rt->rw->kelurahan->kecamatan->nama_kecamatan,
+                    'tracking_summary' => $trackingData['summary'],
+                    'total_warga' => $trackingData['total_warga'],
+                    'last_check' => $trackingData['last_check'],
+                    'trend' => $trackingData['trend'],
+                    'active_kaders' => $trackingData['active_kaders']
+                ];
+            }
+
+            // Set center coordinates jika ada data
+            if (!empty($mapData)) {
+                $avgLat = array_sum(array_column($mapData, 'lat')) / count($mapData);
+                $avgLng = array_sum(array_column($mapData, 'lng')) / count($mapData);
+                
+                $coordinates['lat'] = $avgLat;
+                $coordinates['lng'] = $avgLng;
+            }
+
+            // Get overall statistics
+            $statistics = $this->getOverallTrackingStatistics($mapData);
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'markers' => $mapData,
                     'center' => $coordinates,
-                    'bounds' => $this->calculateBounds($mapData)
+                    'statistics' => $statistics,
+                    'total_records' => count($mapData),
+                    'period' => 'current_month' // UBAH: dari 'last_month' ke 'current_month'
                 ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memuat data peta: ' . $e->getMessage()
+                'message' => 'Gagal memuat data tracking: ' . $e->getMessage()
             ]);
         }
     }
 
-    private function generatePopupContent($rt, $trackingStats = null)
-    {
-        if (!$trackingStats) {
-            $trackingStats = $this->getTrackingStatsForRt($rt->id);
-        }
-
-        $statusClass = $this->getStatusClass($trackingStats['status']);
-        $statusText = $this->getStatusText($trackingStats['status']);
-        
-        return "
-            <div class='p-3'>
-                <h4 class='font-semibold text-lg mb-2'>RT {$rt->nomor_rt} / RW {$rt->rw->nomor_rw}</h4>
-                <p class='text-sm text-gray-600 mb-2'>{$rt->rw->kelurahan->nama_kelurahan}, {$rt->rw->kelurahan->kecamatan->nama_kecamatan}</p>
-                <div class='space-y-1 text-sm'>
-                    <div class='flex justify-between'>
-                        <span>Jumlah Warga:</span>
-                        <span class='font-medium'>{$trackingStats['total_warga']} orang</span>
-                    </div>
-                    <div class='flex justify-between'>
-                        <span>Kasus Tidak Aman:</span>
-                        <span class='font-medium text-red-600'>{$trackingStats['tidak_aman']} kasus</span>
-                    </div>
-                    <div class='flex justify-between'>
-                        <span>Kondisi Aman:</span>
-                        <span class='font-medium text-green-600'>{$trackingStats['aman']} kasus</span>
-                    </div>
-                    <div class='flex justify-between'>
-                        <span>Belum Dicek:</span>
-                        <span class='font-medium text-yellow-600'>{$trackingStats['belum_dicek']} kasus</span>
-                    </div>
-                    <div class='flex justify-between mt-2'>
-                        <span>Status Wilayah:</span>
-                        <span class='px-2 py-1 rounded text-xs {$statusClass}'>{$statusText}</span>
-                    </div>
-                    <div class='flex justify-between'>
-                        <span>Update Terakhir:</span>
-                        <span class='text-xs text-gray-500'>{$trackingStats['last_update']}</span>
-                    </div>
-                </div>
-            </div>
-        ";
-    }
-
-    private function getTrackingStatsForRt($rtId)
+    // UBAH: Method untuk mendapatkan tracking data RT - bulan berjalan
+    private function getTrackingDataForRt($rtId)
     {
         // Get all warga in this RT
         $wargaIds = Warga::where('rt_id', $rtId)->pluck('id');
@@ -358,109 +221,155 @@ class LokasiController extends Controller
         if ($totalWarga == 0) {
             return [
                 'total_warga' => 0,
-                'aman' => 0,
-                'tidak_aman' => 0,
-                'belum_dicek' => 0,
-                'status' => 'belum_dicek',
-                'last_update' => 'Belum ada data'
+                'summary' => [
+                    'aman' => 0,
+                    'tidak_aman' => 0,
+                    'belum_dicek' => 0
+                ],
+                'last_check' => 'Belum ada data',
+                'trend' => 'Tidak ada data',
+                'active_kaders' => 0
             ];
         }
 
-        // Get tracking data for this month
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+        // UBAH: Get tracking data untuk bulan berjalan saja
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
 
         $trackingData = TrackingHarian::whereIn('warga_id', $wargaIds)
-            ->whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
+            ->whereBetween('tanggal', [$currentMonthStart, $currentMonthEnd])
             ->get();
 
-        // Count status
+        // Count berdasarkan kategori_masalah
         $aman = $trackingData->where('kategori_masalah', 'Aman')->count();
         $tidakAman = $trackingData->where('kategori_masalah', 'Tidak Aman')->count();
-        $belumDicek = $totalWarga - $aman - $tidakAman;
+        
+        // Hitung warga yang belum pernah dicek dalam bulan berjalan
+        $wargaYangSudahDicek = $trackingData->pluck('warga_id')->unique()->count();
+        $belumDicek = $totalWarga - $wargaYangSudahDicek;
 
-        // Determine overall status
-        $status = 'belum_dicek';
-        if ($tidakAman > 0) {
-            if ($tidakAman > 15) {
-                $status = 'bahaya';
-            } elseif ($tidakAman > 5) {
-                $status = 'waspada';
-            } else {
-                $status = 'tidak_aman';
+        // Get last check
+        $lastTracking = $trackingData->sortByDesc('created_at')->first();
+        $lastCheck = $lastTracking ? 
+            Carbon::parse($lastTracking->created_at)->diffForHumans() : 
+            'Belum ada pemeriksaan bulan ini';
+
+        // UBAH: Calculate trend (compare dengan bulan sebelumnya)
+        $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
+        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+        
+        $previousMonthData = TrackingHarian::whereIn('warga_id', $wargaIds)
+            ->whereBetween('tanggal', [$lastMonthStart, $lastMonthEnd])
+            ->where('kategori_masalah', 'Tidak Aman')
+            ->count();
+
+        $trend = 'Stabil';
+        if ($previousMonthData > 0) {
+            if ($tidakAman > $previousMonthData) {
+                $trend = 'Meningkat';
+            } elseif ($tidakAman < $previousMonthData) {
+                $trend = 'Menurun';
             }
-        } elseif ($aman > 0) {
-            $status = 'aman';
+        } elseif ($tidakAman > 0) {
+            $trend = 'Baru muncul bulan ini';
         }
 
-        // Get last update
-        $lastUpdate = $trackingData->max('created_at');
-        $lastUpdateFormatted = $lastUpdate ? 
-            Carbon::parse($lastUpdate)->diffForHumans() : 
-            'Belum ada data';
+        // Estimate active kaders (simplified)
+        $activeKaders = max(1, intval($totalWarga / 20)); // Asumsi 1 kader per 20 warga
 
         return [
             'total_warga' => $totalWarga,
-            'aman' => $aman,
-            'tidak_aman' => $tidakAman,
-            'belum_dicek' => $belumDicek,
-            'status' => $status,
-            'last_update' => $lastUpdateFormatted
+            'summary' => [
+                'aman' => $aman,
+                'tidak_aman' => $tidakAman,
+                'belum_dicek' => $belumDicek
+            ],
+            'last_check' => $lastCheck,
+            'trend' => $trend,
+            'active_kaders' => $activeKaders
         ];
     }
 
-    private function getStatusClass($status)
+    // Tidak ada perubahan pada method ini
+    private function getOverallTrackingStatistics($mapData)
     {
-        switch($status) {
-            case 'aman':
-                return 'bg-green-100 text-green-800';
-            case 'tidak_aman':
-                return 'bg-orange-100 text-orange-800';
-            case 'waspada':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'bahaya':
-                return 'bg-red-100 text-red-800';
-            case 'belum_dicek':
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    }
+        $amanCount = 0;
+        $waspada = 0;
+        $bahaya = 0;
+        $belumDicek = 0;
+        $totalRecords = 0;
 
-    private function getStatusText($status)
-    {
-        switch($status) {
-            case 'aman':
-                return 'Aman';
-            case 'tidak_aman':
-                return 'Tidak Aman';
-            case 'waspada':
-                return 'Waspada';
-            case 'bahaya':
-                return 'Bahaya';
-            case 'belum_dicek':
-            default:
-                return 'Belum Dicek';
-        }
-    }
+        foreach ($mapData as $data) {
+            $summary = $data['tracking_summary'];
+            $total = $summary['aman'] + $summary['tidak_aman'] + $summary['belum_dicek'];
+            
+            if ($total == 0) {
+                $belumDicek++;
+                continue;
+            }
 
-    private function calculateBounds($markers)
-    {
-        if (empty($markers)) {
-            return null;
+            $totalRecords += $total;
+            
+            // Determine status based on percentage
+            $tidakAmanPercentage = $total > 0 ? ($summary['tidak_aman'] / $total) : 0;
+            
+            if ($summary['tidak_aman'] == 0 && $summary['aman'] > 0) {
+                $amanCount++;
+            } elseif ($tidakAmanPercentage > 0.5) {
+                $bahaya++;
+            } elseif ($tidakAmanPercentage >= 0.2) {
+                $waspada++;
+            } else {
+                $belumDicek++;
+            }
         }
-
-        $lats = array_column($markers, 'lat');
-        $lngs = array_column($markers, 'lng');
 
         return [
-            'north' => max($lats) + 0.001,
-            'south' => min($lats) - 0.001,
-            'east' => max($lngs) + 0.001,
-            'west' => min($lngs) - 0.001
+            'aman' => $amanCount,
+            'waspada' => $waspada,
+            'bahaya' => $bahaya,
+            'belum_dicek' => $belumDicek,
+            'total_records' => $totalRecords,
+            'total_areas' => count($mapData)
         ];
     }
 
+    // UBAH: Method untuk mendapatkan statistik bulan berjalan
+    private function getTrackingStatistics()
+    {
+        // UBAH: Get statistics untuk bulan berjalan saja
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+
+        $rts = Rt::whereNotNull('koordinat_lat')
+                ->whereNotNull('koordinat_lng')
+                ->get();
+
+        $amanCount = 0;
+        $tidakAmanCount = 0;
+        $belumDicekCount = 0;
+
+        foreach ($rts as $rt) {
+            $trackingData = $this->getTrackingDataForRt($rt->id);
+            $summary = $trackingData['summary'];
+            
+            if ($summary['tidak_aman'] > 0) {
+                $tidakAmanCount++;
+            } elseif ($summary['aman'] > 0) {
+                $amanCount++;
+            } else {
+                $belumDicekCount++;
+            }
+        }
+
+        return (object) [
+            'aman' => $amanCount,
+            'tidak_aman' => $tidakAmanCount,
+            'belum_dicek' => $belumDicekCount
+        ];
+    }
+
+    // Tidak ada perubahan pada method ini
     public function getWilayahKoordinat(Request $request)
     {
         try {
@@ -502,108 +411,115 @@ class LokasiController extends Controller
         }
     }
 
-    private function getAreaStatistics()
-    {
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
-        // Get all RT that have coordinates
-        $rts = Rt::whereNotNull('koordinat_lat')
-                ->whereNotNull('koordinat_lng')
+    // TAMBAH: Method baru untuk mendapatkan data chart dengan filter lokasi
+    public function getMonthlyChartData(Request $request) {
+        try {
+            $month = $request->get('month', date('n'));
+            $year = $request->get('year', date('Y'));
+            
+            // Mendapatkan jumlah hari dalam bulan
+            $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+            
+            // Inisialisasi array untuk setiap hari dalam bulan
+            $tidakAmanData = array_fill(0, $daysInMonth, 0);
+            $amanData = array_fill(0, $daysInMonth, 0);
+            
+            // Query data tracking harian untuk bulan ini
+            $startDate = Carbon::create($year, $month, 1)->startOfDay();
+            $endDate = Carbon::create($year, $month, $daysInMonth)->endOfDay();
+            
+            // TAMBAH: Base query untuk tracking dengan filter lokasi
+            $trackingQuery = TrackingHarian::whereBetween('tanggal', [$startDate, $endDate]);
+            
+            // TAMBAH: Apply filter lokasi jika ada
+            if ($request->filled('rt_id')) {
+                $wargaIds = Warga::where('rt_id', $request->rt_id)->pluck('id');
+                $trackingQuery->whereIn('warga_id', $wargaIds);
+            } elseif ($request->filled('rw_id')) {
+                $wargaIds = Warga::whereHas('rt', function($q) use ($request) {
+                    $q->where('rw_id', $request->rw_id);
+                })->pluck('id');
+                $trackingQuery->whereIn('warga_id', $wargaIds);
+            } elseif ($request->filled('kelurahan_id')) {
+                $wargaIds = Warga::whereHas('rt.rw', function($q) use ($request) {
+                    $q->where('kelurahan_id', $request->kelurahan_id);
+                })->pluck('id');
+                $trackingQuery->whereIn('warga_id', $wargaIds);
+            } elseif ($request->filled('kecamatan_id')) {
+                $wargaIds = Warga::whereHas('rt.rw.kelurahan', function($q) use ($request) {
+                    $q->where('kecamatan_id', $request->kecamatan_id);
+                })->pluck('id');
+                $trackingQuery->whereIn('warga_id', $wargaIds);
+            }
+            
+            // Mendapatkan data tracking harian per hari
+            $trackingData = $trackingQuery
+                ->selectRaw('DATE(tanggal) as tanggal, kategori_masalah, COUNT(*) as jumlah')
+                ->groupBy('tanggal', 'kategori_masalah')
                 ->get();
-
-        $amanCount = 0;
-        $tidakAmanCount = 0;
-        $belumDicekCount = 0;
-
-        foreach ($rts as $rt) {
-            $stats = $this->getTrackingStatsForRt($rt->id);
             
-            switch($stats['status']) {
-                case 'aman':
-                    $amanCount++;
-                    break;
-                case 'tidak_aman':
-                case 'waspada':
-                case 'bahaya':
-                    $tidakAmanCount++;
-                    break;
-                case 'belum_dicek':
-                default:
-                    $belumDicekCount++;
-                    break;
+            // Mengisi data ke array berdasarkan tanggal
+            foreach ($trackingData as $data) {
+                $dayOfMonth = Carbon::parse($data->tanggal)->day;
+                $arrayIndex = $dayOfMonth - 1; // Array dimulai dari 0
+                
+                if ($data->kategori_masalah === 'Tidak Aman') {
+                    $tidakAmanData[$arrayIndex] = (int) $data->jumlah;
+                } elseif ($data->kategori_masalah === 'Aman') {
+                    $amanData[$arrayIndex] = (int) $data->jumlah;
+                }
             }
-        }
-
-        return (object) [
-            'aman' => $amanCount,
-            'tidak_aman' => $tidakAmanCount,
-            'belum_dicek' => $belumDicekCount
-        ];
-    }
-
-    private function getTrackingData()
-    {
-        // Return recent tracking data for charts (implement later)
-        return [];
-    }
-
-    private function getRawanAreas()
-    {
-        // Get areas with high cases
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
-        $rts = Rt::with(['rw.kelurahan.kecamatan'])
-            ->whereNotNull('koordinat_lat')
-            ->whereNotNull('koordinat_lng')
-            ->get();
-
-        $rawanAreas = [];
-        
-        foreach ($rts as $rt) {
-            $stats = $this->getTrackingStatsForRt($rt->id);
             
-            if ($stats['status'] === 'bahaya' || $stats['tidak_aman'] > 10) {
-                $rawanAreas[] = [
-                    'rt_id' => $rt->id,
-                    'nama' => "RT {$rt->nomor_rt}/RW {$rt->rw->nomor_rw}",
-                    'wilayah' => "{$rt->rw->kelurahan->nama_kelurahan}, {$rt->rw->kelurahan->kecamatan->nama_kecamatan}",
-                    'kasus' => $stats['tidak_aman'],
-                    'lat' => $rt->koordinat_lat,
-                    'lng' => $rt->koordinat_lng
-                ];
-            }
-        }
-
-        return $rawanAreas;
-    }
-
-    private function getRtMarkers()
-    {
-        // Get all RT markers for map
-        $rts = Rt::with(['rw.kelurahan.kecamatan'])
-            ->whereNotNull('koordinat_lat')
-            ->whereNotNull('koordinat_lng')
-            ->limit(100) // Limit for performance
-            ->get();
-
-        $markers = [];
-        
-        foreach ($rts as $rt) {
-            $stats = $this->getTrackingStatsForRt($rt->id);
+            // Menghitung statistik
+            $maxTidakAman = max($tidakAmanData);
+            $totalTidakAman = array_sum($tidakAmanData);
+            $maxAman = max($amanData);
+            $totalAman = array_sum($amanData);
             
-            $markers[] = [
-                'id' => $rt->id,
-                'lat' => (float) $rt->koordinat_lat,
-                'lng' => (float) $rt->koordinat_lng,
-                'title' => "RT {$rt->nomor_rt}/RW {$rt->rw->nomor_rw}",
-                'status' => $stats['status'],
-                'cases' => $stats['tidak_aman'],
-                'info' => $this->generatePopupContent($rt, $stats)
-            ];
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tidak_aman' => $tidakAmanData,
+                    'aman' => $amanData,
+                    'stats' => [
+                        'maxTidakAman' => $maxTidakAman,
+                        'totalTidakAman' => $totalTidakAman,
+                        'maxAman' => $maxAman,
+                        'totalAman' => $totalAman
+                    ]
+                ],
+                'debug' => [
+                    'period' => "{$month}/{$year}",
+                    'days_in_month' => $daysInMonth,
+                    'raw_data_count' => $trackingData->count(),
+                    'date_range' => [
+                        'start' => $startDate->format('Y-m-d'),
+                        'end' => $endDate->format('Y-m-d')
+                    ],
+                    'filters_applied' => [
+                        'kecamatan_id' => $request->get('kecamatan_id'),
+                        'kelurahan_id' => $request->get('kelurahan_id'),
+                        'rw_id' => $request->get('rw_id'),
+                        'rt_id' => $request->get('rt_id')
+                    ]
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data grafik: ' . $e->getMessage(),
+                'data' => [
+                    'tidak_aman' => array_fill(0, date('t'), 0),
+                    'aman' => array_fill(0, date('t'), 0),
+                    'stats' => [
+                        'maxTidakAman' => 0,
+                        'totalTidakAman' => 0, // PERBAIKI: typo totalTidakAwan
+                        'maxAman' => 0,
+                        'totalAman' => 0
+                    ]
+                ]
+            ]);
         }
-
-        return $markers;
     }
 }

@@ -3,37 +3,41 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\TrackingHarian;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use App\Models\Warga;
 use Carbon\Carbon;
 
 class TrackingHarianSeeder extends Seeder
 {
     public function run(): void
     {
-        $kaderId = 1;
-        $wargaId = 2;
-        $wargaNik = '1234567890123456';
-        $namaWarga = 'Budi Santoso';
+        $wargaList = DB::table('warga')->get();
+        $today = Carbon::today();
+        $startDate = $today->copy()->subMonths(2); // 2 bulan terakhir
 
-        $tanggal = Carbon::create(2025, 2, 1)->startOfWeek(); // Mulai dari minggu pertama Februari 2025
-        $endTanggal = Carbon::create(2025, 3, 31); // Akhir Maret 2025
+        foreach ($wargaList as $warga) {
+            $date = $startDate->copy();
 
-        while ($tanggal->lte($endTanggal)) {
-            TrackingHarian::create([
-                'warga_id' => $wargaId,
-                'warga_nik' => $wargaNik,
-                'nama_warga' => $namaWarga,
-                'kader_id' => $kaderId,
-                'tanggal' => $tanggal->toDateString(),
-                'kategori_masalah' => collect(['Aman', 'Tidak Aman', 'Belum Dicek'])->random(),
-                'deskripsi' => 'Kondisi lingkungan dan kesehatan warga diperiksa.',
-                'bukti_foto' => null,
-                'status' => 'Selesai',
-                'dibuat_pada' => now(),
-            ]);
+            // Loop setiap 7 hari (1x seminggu)
+            while ($date <= $today) {
+                DB::table('tracking_harian')->insert([
+                    'warga_id' => $warga->id,
+                    'warga_nik' => $warga->nik,
+                    'nama_warga' => $warga->nama_lengkap,
+                    'kader_id' => null, // atau bisa kamu set sesuai RT-nya
+                    'tanggal' => $date->format('Y-m-d'),
+                    'kategori_masalah' => rand(1, 10) > 3 ? 'Aman' : 'Tidak Aman', // ±70% Aman
+                    'deskripsi' => null,
+                    'bukti_foto' => null,
+                    'status' => 'Selesai',
+                    'dibuat_pada' => $date->copy()->setTime(rand(7, 17), rand(0, 59)),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            // Tambah 7 hari untuk minggu berikutnya
-            $tanggal->addWeek();
+                $date->addDays(7); // hanya isi setiap seminggu
+            }
         }
     }
 }

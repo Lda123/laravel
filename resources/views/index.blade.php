@@ -38,14 +38,6 @@
                 </svg>
                 Kader Kesehatan
             </a>
-            
-            <!-- Button Admin (ditambahkan) -->
-            <a href="{{ route('admin.login') }}" class="btn-hover-effect w-full py-3 px-4 text-base bg-[#1D3557] text-white border-none rounded-lg cursor-pointer animate-fade-in flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-                </svg>
-                Administrator
-            </a>
         </div>
         
         <p class="text-base text-[#858585] mt-4 animate-fade-in">Pilih peran Anda untuk melanjutkan</p>

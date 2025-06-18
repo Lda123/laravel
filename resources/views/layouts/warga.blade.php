@@ -9,6 +9,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        [x-cloak] { display: none !important; }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -75,7 +77,7 @@
     @yield('header-scripts')
 </head>
 @stack('scripts')
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="bg-gray-50 min-h-screen flex flex-col" x-data="{ showLogoutModal: false }">
     <!-- Header/Navbar -->
     <header x-data="{ mobileMenuOpen: false }">
         <nav class="bg-blue-600 text-white shadow-md">
@@ -173,7 +175,7 @@
                                         </div>
                                         <div>
                                             <p class="text-sm font-medium text-gray-800">{{ $user->nama_lengkap }}</p>
-                                            <p class="text-xs text-gray-500">Warga</p>
+                                            <p class="text-xs text-gray-500">warga</p>
                                         </div>
                                     </div>
                                 </div>
@@ -186,22 +188,19 @@
                                     <span>Profil Saya</span>
                                 </a>
                                 <a 
-                                    href="#" 
+                                    href="{{ route('warga.profile.edit') }}" 
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center"
                                 >
                                     <i class="fas fa-cog mr-3 text-blue-500 w-5 text-center"></i>
-                                    <span>Pengaturan</span>
+                                    <span>Edit Profile</span>
                                 </a>
-                                <form method="POST" action="{{ route('warga.logout') }}">
-                                    @csrf
-                                    <button 
-                                        type="submit" 
-                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center border-t border-gray-100"
-                                    >
-                                        <i class="fas fa-sign-out-alt mr-3 text-red-500 w-5 text-center"></i>
-                                        <span>Keluar</span>
-                                    </button>
-                                </form>
+                                <button 
+                                    @click="showLogoutModal = true; open = false" 
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150 flex items-center border-t border-gray-100"
+                                >
+                                    <i class="fas fa-sign-out-alt mr-3 text-red-500 w-5 text-center"></i>
+                                    <span>Keluar</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -253,12 +252,9 @@
                         <a href="#" class="py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
                             <i class="fas fa-cog mr-2"></i> Pengaturan
                         </a>
-                        <form method="POST" action="{{ route('warga.logout') }}">
-                            @csrf
-                            <button type="submit" class="w-full text-left py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
-                                <i class="fas fa-sign-out-alt mr-2"></i> Keluar
-                            </button>
-                        </form>
+                        <button @click="showLogoutModal = true; mobileMenuOpen = false" class="w-full text-left py-2 px-4 font-medium hover:bg-blue-700 rounded transition">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -314,6 +310,41 @@
             </div>
         </div>
     </footer>
+
+    <!-- Logout Confirmation Modal -->
+    <div x-cloak x-show="showLogoutModal"
+        style="display: none;"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" @click.away="showLogoutModal = false">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-sign-out-alt text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800">Konfirmasi Keluar</h3>
+            </div>
+            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin keluar dari akun Anda?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="showLogoutModal = false"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 font-medium">
+                    Batal
+                </button>
+                <!-- Ganti dengan form -->
+                <form action="{{ route('warga.logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 font-medium flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Ya, Keluar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

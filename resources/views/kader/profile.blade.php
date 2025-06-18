@@ -26,8 +26,7 @@
                                 {{ substr($kader->nama_lengkap ?? 'K', 0, 1) }}
                             </span>
                         </div>
-                        
-                                            <!-- Foto Profil Aktual -->
+                    <!-- Foto Profil Aktual -->
                     @php
                         $profilePicturePath = null;
                         
@@ -166,7 +165,7 @@
                     <a href="{{ route('kader.video-saya') }}?saved=1" 
                     class="group flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold">
                         <i class="fas fa-video mr-3 text-lg group-hover:scale-110 transition-transform"></i>
-                        <span>Video Saya</span>
+                        <span>Pelatihan Saya</span>
                         <span class="ml-2 bg-white/30 px-2 py-1 rounded-full text-sm">{{ $savedCount }}</span>
                     </a>
                     

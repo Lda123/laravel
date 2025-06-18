@@ -27,63 +27,33 @@ use App\Http\Controllers\Kader\EditProfileKaderController;
 use App\Http\Controllers\Kader\VideoSayaController;
 use App\Http\Controllers\Warga\fitur_utama\RiwayatController;
 use App\Http\Controllers\Warga\fitur_utama\LaporanController;
-use App\Http\Controllers\Auth\AdminAuthController;
-Use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Warga\fitur_utama\InformasiSayaController;
 
 Route::get('/', function () {
     return view('index');
 })->name('welcome');
-
-Route::prefix('admin')->group(function () {
-    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
-    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-    
-    // Admin Dashboard Route (protected)
-    Route::middleware('auth:admin')->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    
-        // Edukasi Management
-        Route::get('/edukasi', [AdminDashboardController::class, 'edukasi'])->name('admin.edukasi');
-        Route::get('/edukasi/create', [AdminDashboardController::class, 'createEdukasi'])->name('admin.edukasi.create');
-        Route::post('/edukasi/store', [AdminDashboardController::class, 'storeEdukasi'])->name('admin.edukasi.store');
-        Route::get('/edukasi/{id}/edit', [AdminDashboardController::class, 'editEdukasi'])->name('admin.edukasi.edit');
-        Route::put('/edukasi/{id}/update', [AdminDashboardController::class, 'updateEdukasi'])->name('admin.edukasi.update');
-        Route::delete('/edukasi/{id}/delete', [AdminDashboardController::class, 'destroyEdukasi'])->name('admin.edukasi.destroy');
-        
-        // Placeholder routes for other sections
-        Route::get('/manajemen-pengguna', function () { return '#'; })->name('admin.manajemen-pengguna');
-        Route::get('/manajemen-forum', function () { return '#'; })->name('admin.manajemen-forum');
-        Route::get('/aduan-warga', function () { return '#'; })->name('admin.aduan-warga');
-    });
-});
 // Kader Routes
 Route::prefix('kader')->group(function() {
     Route::get('/login', [KaderAuthController::class, 'showLoginForm'])->name('kader.login');
     Route::post('/login', [KaderAuthController::class, 'login'])->name('kader.login.submit');
     Route::post('/logout', [KaderAuthController::class, 'logout'])->name('kader.logout');
-    
-    // Protected routes for kader
+
     Route::middleware(['auth:kader'])->group(function() {
        
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('kader.dashboard');
-    
-    // Pelatihan
+
     Route::get('/pelatihan-saya', [DashboardController::class, 'pelatihanSaya'])->name('pelatihan.saya');
     Route::post('/daftar-pelatihan', [DashboardController::class, 'daftarPelatihan'])->name('daftar-pelatihan');
-    Route::post('/daftar-pelatihan-ajax', [DashboardController::class, 'daftarPelatihanAjax'])->name('daftar.pelatihan'); // untuk kompatibilitas AJAX
+    Route::post('/daftar-pelatihan-ajax', [DashboardController::class, 'daftarPelatihanAjax'])->name('daftar.pelatihan'); 
     Route::post('/batalkan-pelatihan', [DashboardController::class, 'batalkanPelatihan'])->name('batalkan-pelatihan');
-    
-    // Laporan - FIXED ROUTES
+
     Route::get('/laporan-harian', [TrackingHarianController::class, 'index'])->name('laporan.harian');
     Route::post('/laporan-harian', [TrackingHarianController::class, 'store'])->name('tracking-harian.store');
     Route::get('/laporan-harian/{tracking}', [TrackingHarianController::class, 'show'])->name('laporan.harian.show');
     Route::get('/laporan-bulanan', [LaporanBulananController::class, 'index'])->name('laporan.index');
     Route::get('/laporan-bulanan/download-template', [LaporanBulananController::class, 'downloadTemplate'])->name('laporan.download-template');
     Route::post('/laporan-bulanan/upload', [LaporanBulananController::class, 'uploadLaporan'])->name('laporan.upload');    
-    // Data Warga
+
     Route::get('/data-warga', [DataWargaController::class, 'index'])->name('data-warga');
     Route::post('/get-kelurahan', [DataWargaController::class, 'getKelurahan'])->name('data-warga.get-kelurahan');
     Route::post('/get-rw', [DataWargaController::class, 'getRw'])->name('data-warga.get-rw');
@@ -118,7 +88,6 @@ Route::prefix('kader')->group(function() {
 
 // Warga Routes
 Route::prefix('warga')->group(function () {
-    // Authentication Routes
     Route::get('/login', [WargaAuthController::class, 'showLoginForm'])->name('warga.login');
     Route::post('/login', [WargaAuthController::class, 'login'])->name('warga.login.submit');
     Route::post('/logout', [WargaAuthController::class, 'logout'])->name('warga.logout');
@@ -131,8 +100,7 @@ Route::prefix('warga')->group(function () {
     Route::get('/otp/resend', [otpController::class, 'resendOtp'])->name('register.otp.resend');
     Route::get('/register/data-diri', [datadiriController::class, 'showDataDiriForm'])->name('register.data_diri');
     Route::post('/register/data-diri', [datadiriController::class, 'storeDataDiri'])->name('register.datadiri.store');
-    
-    // AJAX routes
+
     Route::post('/register/get-kelurahan', [datadiriController::class, 'getKelurahan'])->name('register.get.kelurahan');
     Route::post('/register/get-rw', [datadiriController::class, 'getRw'])->name('register.get.rw');
     Route::post('/register/get-rt', [datadiriController::class, 'getRt'])->name('register.get.rt');
@@ -142,11 +110,9 @@ Route::prefix('warga')->group(function () {
     
     // Protected routes for warga
     Route::middleware(['auth:warga'])->group(function() {
-        // Dashboard
         Route::get('/dashboard', [WargaController::class, 'dashboard'])->name('warga.dashboard');
         Route::get('/home-warga', [WargaController::class, 'dashboard']);
         
-       // Keluhan routes
         Route::get('/keluhan', [KeluhanController::class, 'index'])->name('keluhan');
         Route::post('/keluhan', [KeluhanController::class, 'store'])->name('keluhan.store');
         Route::prefix('events')->group(function () {
@@ -157,48 +123,32 @@ Route::prefix('warga')->group(function () {
         });
         
         Route::get('/warga/lokasi', [LokasiController::class, 'index'])->name('lokasi');
-    
-        // AJAX untuk dropdown cascading
-        Route::post('/lokasi/kelurahan', [LokasiController::class, 'getKelurahan'])
-            ->name('lokasi.kelurahan');
+        Route::post('/lokasi/kelurahan', [LokasiController::class, 'getKelurahan'])->name('lokasi.kelurahan');        
+        Route::post('/lokasi/rw', [LokasiController::class, 'getRw'])->name('lokasi.rw');
+        Route::post('/lokasi/rt', [LokasiController::class, 'getRt'])->name('lokasi.rt');
+        Route::post('/lokasi/wilayah-koordinat', [LokasiController::class, 'getWilayahKoordinat'])->name('lokasi.wilayah-koordinat');
+        Route::post('/lokasi/update-period', [LokasiController::class, 'updatePeriod'])->name('lokasi.update-period');
+        Route::get('/lokasi/map-data', [LokasiController::class, 'getTrackingMapData'])->name('lokasi.map-data');
+        Route::get('/lokasi/statistics', [LokasiController::class, 'getStatistics'])->name('lokasi.statistics');
+        Route::post('/lokasi/update-map-view', [LokasiController::class, 'updateMapView'])->name('lokasi.update-map-view');
+        Route::get('/lokasi/get-area-stats', [LokasiController::class, 'getAreaStats'])->name('lokasi.area-stats');
+        Route::get('/lokasi/monthly-chart-data', [LokasiController::class, 'getMonthlyChartData'])->name('lokasi.monthly-chart-data');
         
-        Route::post('/lokasi/rw', [LokasiController::class, 'getRw'])
-            ->name('lokasi.rw');
-        
-        Route::post('/lokasi/rt', [LokasiController::class, 'getRt'])
-            ->name('lokasi.rt');
-        
-        Route::post('/lokasi/wilayah-koordinat', [LokasiController::class, 'getWilayahKoordinat'])
-            ->name('lokasi.wilayah-koordinat');
-        
-        Route::post('/lokasi/update-period', [LokasiController::class, 'updatePeriod'])
-            ->name('lokasi.update-period');
+        Route::prefix('laporan')->group(function() {
+            Route::get('/', [LaporanController::class, 'index'])->name('warga.laporan.index');
+            Route::get('/buat', [LaporanController::class, 'create'])->name('warga.laporan.create');
+            Route::post('/', [LaporanController::class, 'store'])->name('warga.laporan.store');
+            Route::post('/get-kelurahan', [LaporanController::class, 'getKelurahan'])->name('warga.laporan.get.kelurahan');
+            Route::post('/get-rw', [LaporanController::class, 'getRw'])->name('warga.laporan.get.rw');
+            Route::post('/get-rt', [LaporanController::class, 'getRt'])->name('warga.laporan.get.rt');
+         });
 
-            Route::get('/lokasi/map-data', [LokasiController::class, 'getMapData'])->name('lokasi.map-data');
-
-            // Route untuk mendapatkan statistik real-time
-            Route::get('/lokasi/statistics', [LokasiController::class, 'getStatistics'])->name('lokasi.statistics');
-            // Route tambahan untuk fitur peta yang mungkin diperlukan di masa depan
-            Route::post('/lokasi/update-map-view', [LokasiController::class, 'updateMapView'])->name('lokasi.update-map-view');
-            Route::get('/lokasi/get-area-stats', [LokasiController::class, 'getAreaStats'])->name('lokasi.area-stats');
-
-        // Route untuk mendapatkan data chart
-        Route::get('/lokasi/chart-data', [LokasiController::class, 'updateChart'])->name('lokasi.chart-data');
-        
-        // Additional warga routes
-        Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat');
-        Route::get('/riwayat/{id}', [RiwayatController::class, 'show'])->name('riwayat.show');
-        // Pelaporan routes
-        Route::get('/pelaporan', [LaporanController::class, 'index'])->name('warga.pelaporan');
-        Route::post('/pelaporan', [LaporanController::class, 'store'])->name('pelaporan.store');
-
-        // AJAX routes untuk dropdown hierarkis
         Route::post('/get-kelurahan', [LaporanController::class, 'getKelurahan'])->name('get-kelurahan');
         Route::post('/get-rw', [LaporanController::class, 'getRw'])->name('get-rw');
         Route::post('/get-rt', [LaporanController::class, 'getRt'])->name('get-rt');
 
-        // Riwayat laporan
-        Route::get('/riwayat-laporan', [LaporanController::class, 'history'])->name('riwayat-laporan');
+        Route::get('/riwayat-laporan', [RiwayatController::class, 'index'])->name('warga.riwayat-laporan');
+        Route::get('/riwayat-laporan/{id}', [RiwayatController::class, 'show'])->name('warga.riwayat-laporan.show');
 
         Route::get('/warga/informasi', [InformasiController::class, 'index'])->name('warga.informasi');
         Route::get('/warga/informasi/{id}', [InformasiController::class, 'view'])->name('warga.informasi.view');
@@ -213,7 +163,6 @@ Route::prefix('warga')->group(function () {
         Route::get('/data', [ProfileController::class, 'getProfileData'])->name('warga.profile.data');
         Route::post('/upload-picture', [ProfileController::class, 'uploadProfilePicture'])->name('warga.profile.upload-picture');
         
-        // Edit profile routes
         Route::get('/edit', [EditProfileController::class, 'edit'])->name('warga.profile.edit');
         Route::put('/update', [EditProfileController::class, 'update'])->name('warga.profile.update');
         Route::delete('/delete-photo', [EditProfileController::class, 'deletePhoto'])->name('warga.profile.delete-photo');

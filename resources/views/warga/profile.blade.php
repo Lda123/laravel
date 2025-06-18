@@ -3,7 +3,42 @@
 @section('title', 'Profil - DengueCare')
 
 @section('content')
-<div class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+<div x-data="{ showLogoutModal: false }" class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Modal Logout Confirmation -->
+    <div x-cloak x-show="showLogoutModal"
+        style="display: none;"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl" @click.away="showLogoutModal = false">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-sign-out-alt text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800">Konfirmasi Keluar</h3>
+            </div>
+            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin keluar dari akun Anda?</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="showLogoutModal = false"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 font-medium">
+                    Batal
+                </button>
+                <!-- Ganti dengan form -->
+                <form action="{{ route('warga.logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 font-medium flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Ya, Keluar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Profile Header -->
     <div class="text-center mb-10 animate-fade-in">
         <h1 class="text-4xl font-bold text-gray-800 mb-3">Profil Warga</h1>
@@ -17,37 +52,19 @@
             <div class="md:w-1/3 bg-gradient-to-b from-blue-600 to-blue-700 p-8 flex flex-col items-center justify-center">
                 <!-- Profile Picture Container -->
                 <div class="relative mb-6">
-                    <!-- Profile Picture Circle -->
                     <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl mx-auto relative">
-                        @php
-                            $profilePicturePath = null;
-                            
-                            // Check for profile picture in database
-                            if ($user->profile_pict) {
-                                // Jika path sudah lengkap dengan profile_pictures/warga/, gunakan langsung
-                                if (str_contains($user->profile_pict, 'profile_pictures/warga/')) {
-                                    $profilePicturePath = asset('storage/' . $user->profile_pict);
-                                } else {
-                                    // Jika tidak ada prefix yang benar, tambahkan path lengkap
-                                    $profilePicturePath = asset('storage/profile_pictures/warga/' . basename($user->profile_pict));
-                                }
-                            }
-                        @endphp
-                        
-                        @if($profilePicturePath)
-                            <img src="{{ $profilePicturePath }}" 
+                        @if($user->profile_pict)
+                            <img src="{{ $profile_picture_url }}" 
                                 alt="Foto Profil {{ $user->nama_lengkap }}"
                                 class="w-full h-full object-cover"
                                 id="profileImage"
                                 onerror="this.style.display='none'; document.getElementById('fallbackContainer').style.display='flex'">
-                            <!-- Fallback jika gambar error -->
                             <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent flex items-center justify-center hidden" id="fallbackContainer">
                                 <span class="text-4xl font-bold text-white">
                                     {{ substr($user->nama_lengkap ?? 'W', 0, 1) }}
                                 </span>
                             </div>
                         @else
-                            <!-- Default profile picture -->
                             <div class="w-full h-full bg-gradient-to-br from-blue-500/80 to-blue-600/80 flex items-center justify-center">
                                 <span class="text-4xl font-bold text-white">
                                     {{ substr($user->nama_lengkap ?? 'W', 0, 1) }}
@@ -61,6 +78,16 @@
                 <div class="text-center mt-6">
                     <h3 class="text-xl font-bold text-white mb-2" id="profileName">{{ $user->nama_lengkap }}</h3>
                     <p class="text-blue-100 mb-4">Warga Umum</p>
+                    <div class="flex justify-center space-x-4">
+                        <div class="text-center">
+                            <div class="text-white font-bold text-2xl">{{ $savedEdukasiCount }}</div>
+                            <div class="text-blue-100 text-sm">Informasi Disimpan</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-white font-bold text-2xl">{{ $savedEventCount }}</div>
+                            <div class="text-blue-100 text-sm">Event Disimpan</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -100,35 +127,31 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Home Condition Card -->
                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 mb-8">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-gradient-to-br from-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-500 to-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-600 rounded-xl flex items-center justify-center mr-4">
                             <i class="fas fa-home text-white text-lg"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-800">Kondisi Rumah</h3>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Kondisi Rumah</h3>
+                            @if($home_condition)
+                            <p class="text-sm text-gray-500">
+                                Terakhir diperiksa: {{ \Carbon\Carbon::parse($home_condition->tanggal)->format('d M Y') }}
+                            </p>
+                            @endif
+                        </div>
                     </div>
                     
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</p>
-                            <p class="font-bold text-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-600 text-lg" id="homeStatus">
-                                {{ $home_condition ? ($status_display[$home_condition->kategori_masalah] ?? $home_condition->kategori_masalah) : 'Belum Dicek' }}
-                            </p>
-                        </div>
-                        
-                        @if($home_condition)
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Terakhir Diperiksa</p>
-                            <p class="font-bold text-gray-800 text-lg" id="lastCheckDate">
-                                <i class="fas fa-calendar text-blue-500 mr-2"></i>
-                                {{ \Carbon\Carbon::parse($home_condition->tanggal)->format('d M Y') }}
-                            </p>
-                        </div>
-                        @endif
+                    <!-- Status Badge -->
+                    <div class="inline-block mb-4">
+                        <span class="px-4 py-2 rounded-full text-sm font-semibold bg-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-100 text-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-800">
+                            {{ $home_condition ? ($status_display[$home_condition->kategori_masalah] ?? $home_condition->kategori_masalah) : 'Belum Dicek' }}
+                        </span>
                     </div>
                     
-                    <!-- Pesan Status yang Diperbarui -->
+                    <!-- Pesan Status -->
                     <div class="bg-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-50 p-4 rounded-lg border-l-4 border-{{ $home_condition && $home_condition->kategori_masalah == 'Aman' ? 'green' : ($home_condition && $home_condition->kategori_masalah == 'Tidak Aman' ? 'red' : 'gray') }}-500">
                         @if($home_condition)
                             @if($home_condition->kategori_masalah == 'Aman')
@@ -136,7 +159,7 @@
                                     <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
                                     <div>
                                         <p class="font-semibold text-green-800">Rumah Anda Aman dari DBD</p>
-                                        <p class="text-sm text-green-700 mt-1">Tetap jaga kebersihan rumah dan lakukan PSN (Pemberantasan Sarang Nyamuk) secara rutin untuk mencegah perkembangbiakan nyamuk Aedes aegypti.</p>
+                                        <p class="text-sm text-green-700 mt-1">Tetap jaga kebersihan rumah dan lakukan PSN (Pemberantasan Sarang Nyamuk) secara rutin.</p>
                                     </div>
                                 </div>
                             @elseif($home_condition->kategori_masalah == 'Tidak Aman')
@@ -145,38 +168,19 @@
                                     <div>
                                         <p class="font-semibold text-red-800">Perhatian: Potensi DBD Terdeteksi</p>
                                         <p class="text-sm text-red-700 mt-1">
-                                            Ditemukan indikasi jentik nyamuk di sekitar rumah Anda. Segera lakukan:
+                                            Ditemukan indikasi jentik nyamuk. Segera lakukan:
                                             <ul class="list-disc list-inside mt-1 ml-2">
                                                 <li>Pembersihan tempat penampungan air</li>
                                                 <li>Penutupan wadah yang bisa menampung air</li>
-                                                <li>Penguburan atau daur ulang barang bekas</li>
                                             </ul>
                                         </p>
                                     </div>
                                 </div>
-                            @else
-                                <p class="text-sm text-gray-700">
-                                    Status rumah Anda belum diperiksa. Silakan hubungi petugas jumantik untuk pemeriksaan rutin.
-                                </p>
                             @endif
                         @else
                             <p class="text-sm text-gray-700">
-                                Belum ada data pemeriksaan rumah. Silakan minta pemeriksaan ke petugas jumantik setempat.
+                                Belum ada data pemeriksaan rumah. Silakan minta pemeriksaan ke petugas jumantik.
                             </p>
-                        @endif
-                    </div>
-                    
-                    <div class="mt-6 text-center">
-                        @if(!$home_condition || $home_condition->kategori_masalah == 'Belum Dicek')
-                            <a href="{{ route('warga.pelaporan') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
-                                <i class="fas fa-plus-circle mr-2"></i>
-                                Minta Pemeriksaan Rumah
-                            </a>
-                        @else
-                            <a href="{{ route('warga.riwayat') }}" class="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition shadow-md hover:shadow-lg">
-                                <i class="fas fa-history mr-2"></i>
-                                Lihat Riwayat Pemeriksaan
-                            </a>
                         @endif
                     </div>
                 </div>
@@ -191,46 +195,18 @@
                     
                     <a href="{{ route('warga.informasi-saya') }}" 
                     class="group flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold">
-                        <i class="fas fa-bookmark mr-3 text-lg group-hover:scale-110 transition-transform"></i>
-                        <span>Informasi Saya</span>
+                        <i class="fas fa-video mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span>informasi Saya</span>
+                        <span class="ml-2 bg-white/30 px-2 py-1 rounded-full text-sm">{{ $savedEdukasiCount }}</span>
                     </a>
                     
-                    <a href="{{ route('warga.logout') }}" onclick="return confirm('Yakin ingin keluar?');"
-                    class="group flex items-center px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold">
-                        <i class="fas fa-sign-out-alt mr-3 text-lg group-hover:scale-110 transition-transform"></i>
-                        <span>Keluar</span>
+                    <a href="{{ route('warga.dashboard') }}" 
+                    class="group flex items-center px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold">
+                        <i class="fas fa-home mr-3 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span>Dashboard</span>
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Additional Info Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-        <!-- Help Card -->
-        <div class="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border border-yellow-200 shadow-md">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center mr-3">
-                    <i class="fas fa-question-circle text-white"></i>
-                </div>
-                <h4 class="font-bold text-gray-800">Bantuan</h4>
-            </div>
-            <p class="text-gray-600 text-sm">
-                Jika Anda memiliki pertanyaan atau butuh bantuan terkait DBD, silakan hubungi kader jumantik atau puskesmas terdekat.
-            </p>
-        </div>
-
-        <!-- Contact Card -->
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 shadow-md">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-                    <i class="fas fa-phone text-white"></i>
-                </div>
-                <h4 class="font-bold text-gray-800">Kontak Darurat</h4>
-            </div>
-            <p class="text-gray-600 text-sm">
-                Dalam situasi darurat terkait DBD, segera hubungi Puskesmas setempat atau layanan kesehatan terdekat.
-            </p>
         </div>
     </div>
 </div>
@@ -272,18 +248,7 @@
             })
             .then(response => {
                 if (response.data.success) {
-                    // Update profile picture immediately
                     updateProfilePicture(response.data.image_url);
-                    
-                    // Store updated data for cross-tab sync
-                    const updateData = {
-                        userId: userId,
-                        profilePicture: response.data.image_url,
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('profileUpdated', JSON.stringify(updateData));
-
-                    // Show success message
                     showToast('success', 'Foto profil berhasil diperbarui');
                 } else {
                     showToast('error', response.data.message || 'Gagal mengunggah foto');
@@ -294,10 +259,9 @@
                 showToast('error', error.response?.data?.message || 'Terjadi kesalahan saat mengunggah');
             })
             .finally(() => {
-                // Reset button state
                 uploadButton.innerHTML = originalContent;
                 uploadButton.classList.remove('opacity-75');
-                input.value = ''; // Reset input
+                input.value = '';
             });
         }
     }
@@ -306,36 +270,30 @@
     function updateProfilePicture(imageUrl) {
         const profileImage = document.getElementById('profileImage');
         const fallbackContainer = document.getElementById('fallbackContainer');
-        const profileContainer = document.querySelector('.w-44.h-44');
         
         if (profileImage) {
-            // Update existing image
             profileImage.src = imageUrl + '?' + new Date().getTime();
             profileImage.style.display = 'block';
             if (fallbackContainer) {
                 fallbackContainer.style.display = 'none';
             }
         } else {
-            // Create new image element if it doesn't exist
             const img = document.createElement('img');
             img.src = imageUrl + '?' + new Date().getTime();
             img.alt = 'Foto Profil';
             img.className = 'w-full h-full object-cover';
             img.id = 'profileImage';
             img.onload = function() {
-                if (fallbackContainer) {
-                    fallbackContainer.style.display = 'none';
-                }
+                if (fallbackContainer) fallbackContainer.style.display = 'none';
             };
             img.onerror = function() {
-                handleImageError(this);
+                this.style.display = 'none';
+                if (fallbackContainer) fallbackContainer.style.display = 'flex';
             };
             
-            // Remove existing default div and add image
+            const profileContainer = document.querySelector('.w-44.h-44');
             const existingDefault = profileContainer.querySelector('.bg-gradient-to-br');
-            if (existingDefault) {
-                existingDefault.remove();
-            }
+            if (existingDefault) existingDefault.remove();
             
             profileContainer.insertBefore(img, profileContainer.firstChild);
         }

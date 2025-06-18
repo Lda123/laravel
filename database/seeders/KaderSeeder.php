@@ -29,7 +29,7 @@ class KaderSeeder extends Seeder
                 'telepon' => '08123456791',
                 'password' => Hash::make('passwordKader456'),
                 'profil_pict' => null, // Add this line
-                'rt_id' => 1,
+                'rt_id' => 2,
                 'dibuat_pada' => now(),
             ],
             [
@@ -37,7 +37,7 @@ class KaderSeeder extends Seeder
                 'telepon' => '08123456792',
                 'password' => Hash::make('passwordKader789'),
                 'profil_pict' => null, // Add this line
-                'rt_id' => 1,
+                'rt_id' => 3,
                 'dibuat_pada' => now(),
             ],
         ]);
